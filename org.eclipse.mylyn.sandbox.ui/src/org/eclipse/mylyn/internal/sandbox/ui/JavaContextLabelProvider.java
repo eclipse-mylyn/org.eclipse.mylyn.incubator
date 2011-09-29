@@ -23,7 +23,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.mylyn.context.core.IInteractionElement;
 import org.eclipse.mylyn.context.core.IInteractionRelation;
 import org.eclipse.mylyn.internal.context.core.InteractionContextManager;
-import org.eclipse.mylyn.internal.context.ui.ContextUiImages;
 import org.eclipse.mylyn.internal.java.ui.JavaStructureBridge;
 import org.eclipse.mylyn.internal.java.ui.JavaUiBridgePlugin;
 import org.eclipse.mylyn.internal.java.ui.search.AbstractJavaRelationProvider;
@@ -32,6 +31,7 @@ import org.eclipse.mylyn.internal.java.ui.search.JavaImplementorsProvider;
 import org.eclipse.mylyn.internal.java.ui.search.JavaReadAccessProvider;
 import org.eclipse.mylyn.internal.java.ui.search.JavaReferencesProvider;
 import org.eclipse.mylyn.internal.java.ui.search.JavaWriteAccessProvider;
+import org.eclipse.mylyn.internal.provisional.commons.ui.CommonImages;
 import org.eclipse.swt.graphics.Image;
 
 /**
@@ -95,7 +95,7 @@ public class JavaContextLabelProvider extends AppearanceAwareLabelProvider {
 		} else if (object instanceof IInteractionRelation) {
 			ImageDescriptor descriptor = getIconForRelationship(((IInteractionRelation) object).getRelationshipHandle());
 			if (descriptor != null) {
-				return ContextUiImages.getImage(descriptor);
+				return CommonImages.getImage(descriptor);
 			} else {
 				return null;
 			}
@@ -105,17 +105,17 @@ public class JavaContextLabelProvider extends AppearanceAwareLabelProvider {
 
 	private ImageDescriptor getIconForRelationship(String relationshipHandle) {
 		if (relationshipHandle.equals(AbstractJavaRelationProvider.ID_GENERIC)) {
-			return ContextUiImages.EDGE_REFERENCE;
+			return SandboxUiImages.EDGE_REFERENCE;
 		} else if (relationshipHandle.equals(JavaReferencesProvider.ID)) {
-			return ContextUiImages.EDGE_REFERENCE;
+			return SandboxUiImages.EDGE_REFERENCE;
 		} else if (relationshipHandle.equals(JavaImplementorsProvider.ID)) {
-			return ContextUiImages.EDGE_INHERITANCE;
+			return SandboxUiImages.EDGE_INHERITANCE;
 		} else if (relationshipHandle.equals(JUnitReferencesProvider.ID)) {
 			return EDGE_REF_JUNIT;
 		} else if (relationshipHandle.equals(JavaWriteAccessProvider.ID)) {
-			return ContextUiImages.EDGE_ACCESS_WRITE;
+			return SandboxUiImages.EDGE_ACCESS_WRITE;
 		} else if (relationshipHandle.equals(JavaReadAccessProvider.ID)) {
-			return ContextUiImages.EDGE_ACCESS_READ;
+			return SandboxUiImages.EDGE_ACCESS_READ;
 		} else {
 			return null;
 		}

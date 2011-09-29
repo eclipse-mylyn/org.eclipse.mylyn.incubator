@@ -43,11 +43,11 @@ import org.eclipse.mylyn.context.core.IInteractionRelation;
 import org.eclipse.mylyn.context.ui.ContextUi;
 import org.eclipse.mylyn.internal.context.core.AbstractRelationProvider;
 import org.eclipse.mylyn.internal.context.core.ContextCorePlugin;
-import org.eclipse.mylyn.internal.context.ui.ContextUiImages;
 import org.eclipse.mylyn.internal.context.ui.ContextUiPlugin;
 import org.eclipse.mylyn.internal.context.ui.DoiOrderSorter;
 import org.eclipse.mylyn.internal.context.ui.views.QuickOutlinePatternAndInterestFilter;
 import org.eclipse.mylyn.internal.sandbox.ui.DelegatingContextLabelProvider;
+import org.eclipse.mylyn.internal.sandbox.ui.SandboxUiImages;
 import org.eclipse.mylyn.internal.sandbox.ui.SandboxUiPlugin;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -794,7 +794,7 @@ public class RelatedElementsPopupDialog extends PopupDialog implements IInformat
 			setId(ID);
 			setText(LABEL);
 			setToolTipText(LABEL);
-			setImageDescriptor(ContextUiImages.QUALIFY_NAMES);
+			setImageDescriptor(SandboxUiImages.QUALIFY_NAMES);
 			update(ContextUiPlugin.getDefault().getPreferenceStore().getBoolean(ID));
 		}
 

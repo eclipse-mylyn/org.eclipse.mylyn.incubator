@@ -15,7 +15,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.mylyn.internal.context.ui.ContextUiImages;
+import org.eclipse.mylyn.internal.sandbox.ui.SandboxUiImages;
 import org.eclipse.ui.IViewActionDelegate;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.PlatformUI;
@@ -34,7 +34,7 @@ public class EditHighlightersAction extends Action implements IViewActionDelegat
 		setText("Edit Highlighters...");
 		setToolTipText("Edit Highlighters...");
 		setId(ID);
-		setImageDescriptor(ContextUiImages.COLOR_PALETTE);
+		setImageDescriptor(SandboxUiImages.COLOR_PALETTE);
 	}
 
 	@Override

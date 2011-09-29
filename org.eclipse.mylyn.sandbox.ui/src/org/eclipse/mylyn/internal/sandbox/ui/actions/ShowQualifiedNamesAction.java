@@ -13,8 +13,8 @@ package org.eclipse.mylyn.internal.sandbox.ui.actions;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.mylyn.internal.context.ui.ContextUiImages;
 import org.eclipse.mylyn.internal.context.ui.ContextUiPlugin;
+import org.eclipse.mylyn.internal.sandbox.ui.SandboxUiImages;
 import org.eclipse.mylyn.internal.sandbox.ui.views.ActiveSearchView;
 
 /**
@@ -35,7 +35,7 @@ public class ShowQualifiedNamesAction extends Action {
 		setId(ID);
 		setText(LABEL);
 		setToolTipText(LABEL);
-		setImageDescriptor(ContextUiImages.QUALIFY_NAMES);
+		setImageDescriptor(SandboxUiImages.QUALIFY_NAMES);
 		update(ContextUiPlugin.getDefault().getPreferenceStore().getBoolean(ID));
 	}
 
