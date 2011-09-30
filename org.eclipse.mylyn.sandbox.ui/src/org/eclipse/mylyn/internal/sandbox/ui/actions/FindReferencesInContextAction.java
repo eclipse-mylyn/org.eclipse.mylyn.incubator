@@ -23,7 +23,7 @@ import org.eclipse.jdt.ui.search.ElementQuerySpecification;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.mylyn.internal.context.ui.ContextWorkingSetManager;
+import org.eclipse.mylyn.internal.sandbox.ui.context.ContextWorkingSetManager;
 import org.eclipse.search.ui.NewSearchUI;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;

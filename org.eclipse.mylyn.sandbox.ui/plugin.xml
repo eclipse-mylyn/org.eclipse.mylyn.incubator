@@ -432,5 +432,17 @@
           name="Eclipse.org Plugin Link"
           order="2000"/>
    </extension>  
-   
+
+    <extension 
+         point="org.eclipse.mylyn.context.core.bridges">
+      <structureBridge 
+      		class="org.eclipse.mylyn.internal.sandbox.ui.context.TaskStructureBridge"/> 
+   </extension>
+   <extension 
+         point="org.eclipse.mylyn.context.ui.bridges">
+      <uiBridge
+            class="org.eclipse.mylyn.internal.sandbox.ui.context.TaskUiBridge"
+            contentType="meta/task"/>
+   </extension>   
+    
 </plugin>
