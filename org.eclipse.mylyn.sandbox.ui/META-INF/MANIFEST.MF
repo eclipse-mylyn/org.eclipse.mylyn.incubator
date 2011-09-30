@@ -38,6 +38,7 @@ Bundle-Vendor: Eclipse Mylyn
 Export-Package: org.eclipse.mylyn.internal.sandbox.ui;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.ui.actions;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.ui.commands;x-internal:=true,
+ org.eclipse.mylyn.internal.sandbox.ui.context;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.ui.editors;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.ui.highlighters;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.ui.hyperlinks;x-internal:=true,
