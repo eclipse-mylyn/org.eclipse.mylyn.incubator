@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.mylyn.internal.sandbox.search.ui.provider.BasicSearchProvider;
 import org.eclipse.mylyn.sandbox.search.ui.SearchProvider;
 
 /**
@@ -29,6 +30,8 @@ import org.eclipse.mylyn.sandbox.search.ui.SearchProvider;
  */
 public class SearchProviders {
 	private static final String EXTENSION_POINT_NAME_SEARCH_PROVIDER = "searchProvider"; //$NON-NLS-1$
+
+	private static boolean noProviderWarningLogged;
 
 	public static List<SearchProvider> getSearchProviders() {
 		List<SearchProvider> providers = new ArrayList<SearchProvider>();
@@ -62,8 +65,15 @@ public class SearchProviders {
 			return new CompositeSearchProvider(searchProviders);
 		} else if (!searchProviders.isEmpty()) {
 			return searchProviders.get(0);
+		} else {
+			if (!noProviderWarningLogged) {
+				noProviderWarningLogged = true;
+				SearchPlugin.getDefault()
+						.getLog()
+						.log(new Status(IStatus.WARNING, SearchPlugin.BUNDLE_ID,
+								Messages.SearchProviders_NoSearchProvidersAvailable));
+			}
+			return new BasicSearchProvider();
 		}
-		throw new CoreException(new Status(IStatus.ERROR, SearchPlugin.BUNDLE_ID,
-				Messages.SearchProviders_NoSearchProvidersAvailable));
 	}
 }
