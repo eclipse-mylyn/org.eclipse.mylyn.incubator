@@ -94,10 +94,10 @@ public class TaskReportGeneratorTest extends TestCase {
 	}
 
 	public void testCompletedBugzillaTasksRetrieved() throws InvocationTargetException, InterruptedException {
-		TaskRepository repository = new TaskRepository(BugzillaCorePlugin.CONNECTOR_KIND,
-				BugzillaFixture.TEST_BUGZILLA_LATEST_URL);
+		TaskRepository repository = new TaskRepository(BugzillaCorePlugin.CONNECTOR_KIND, BugzillaFixture.current()
+				.getRepositoryUrl());
 		TasksUiPlugin.getRepositoryManager().addRepository(repository);
-		TaskTask task1 = new TaskTask(BugzillaFixture.TEST_BUGZILLA_LATEST_URL, "1", "bugzillatask 1");
+		TaskTask task1 = new TaskTask(repository.getUrl(), "1", "bugzillatask 1");
 		taskList.addTask(task1);
 
 		Calendar cal = Calendar.getInstance();
