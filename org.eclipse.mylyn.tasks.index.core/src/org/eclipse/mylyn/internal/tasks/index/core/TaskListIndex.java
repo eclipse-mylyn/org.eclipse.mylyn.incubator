@@ -49,6 +49,7 @@ import org.apache.lucene.util.Version;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
@@ -280,6 +281,10 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	 * @throws InterruptedException
 	 */
 	public void waitUntilIdle() throws InterruptedException {
+		// FIXME: this doesn't work with unit tests, since the job manager is not running
+		if (!Platform.isRunning()) {
+			Thread.sleep(150L);
+		}
 		maintainIndexJob.join();
 	}
 
@@ -519,14 +524,13 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 			final int WORK_PER_SEGMENT = 1000;
 			SubMonitor monitor = SubMonitor.convert(m, 3 * WORK_PER_SEGMENT);
 			try {
+				if (monitor.isCanceled()) {
+					return Status.CANCEL_STATUS;
+				}
 				if (!rebuildIndex) {
 					try {
 						IndexReader reader = IndexReader.open(directory, false);
-						try {
-
-						} finally {
-							reader.close();
-						}
+						reader.close();
 					} catch (CorruptIndexException e) {
 						rebuildIndex = true;
 					}
