@@ -49,6 +49,7 @@ import org.apache.lucene.util.Version;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
@@ -114,9 +115,13 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		}
 	}
 
+	private static enum MaintainIndexType {
+		STARTUP, REINDEX
+	}
+
 	private Directory directory;
 
-	private Job maintainIndexJob;
+	private MaintainIndexJob maintainIndexJob;
 
 	private final Map<ITask, TaskData> reindexQueue = new HashMap<ITask, TaskData>();
 
@@ -218,7 +223,32 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		dataManager.addListener(this);
 		taskList.addChangeListener(this);
 
-		maintainIndexJob.schedule(startupDelay);
+		scheduleIndexMaintenance(MaintainIndexType.STARTUP);
+	}
+
+	private void scheduleIndexMaintenance(MaintainIndexType type) {
+		long delay = 0L;
+		switch (type) {
+		case STARTUP:
+			delay = startupDelay;
+			break;
+		case REINDEX:
+			delay = reindexDelay;
+		}
+
+		if (delay == 0L) {
+			// primarily for testing purposes
+
+			maintainIndexJob.cancel();
+			try {
+				maintainIndexJob.join();
+			} catch (InterruptedException e) {
+				// ignore
+			}
+			maintainIndexJob.run(new NullProgressMonitor());
+		} else {
+			maintainIndexJob.schedule(delay);
+		}
 	}
 
 	public boolean matches(ITask task, String patternString) {
@@ -272,7 +302,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 
 	public void reindex() {
 		rebuildIndex = true;
-		maintainIndexJob.schedule(reindexDelay);
+		scheduleIndexMaintenance(MaintainIndexType.REINDEX);
 	}
 
 	/**
@@ -281,9 +311,10 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	 * @throws InterruptedException
 	 */
 	public void waitUntilIdle() throws InterruptedException {
-		// FIXME: this doesn't work with unit tests, since the job manager is not running
 		if (!Platform.isRunning()) {
-			Thread.sleep(150L);
+			// job join() behaviour is not the same when platform is not running
+			Logger.getLogger(TaskListIndex.class.getName()).warning(
+					"Index job joining may not work properly when Eclipse platform is not running"); //$NON-NLS-1$
 		}
 		maintainIndexJob.join();
 	}
@@ -396,7 +427,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		} catch (CorruptIndexException e) {
 			rebuildIndex = true;
 			if (maintainIndexJob != null) {
-				maintainIndexJob.schedule(reindexDelay);
+				scheduleIndexMaintenance(MaintainIndexType.REINDEX);
 			}
 		} catch (FileNotFoundException e) {
 			rebuildIndex = true;
@@ -440,7 +471,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		synchronized (reindexQueue) {
 			reindexQueue.put(task, taskData);
 		}
-		maintainIndexJob.schedule(reindexDelay);
+		scheduleIndexMaintenance(MaintainIndexType.REINDEX);
 	}
 
 	private void addIndexedAttributes(Document document, TaskAttribute parentAttribute) {
@@ -510,7 +541,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		}
 	}
 
-	public class MaintainIndexJob extends Job {
+	private class MaintainIndexJob extends Job {
 
 		public MaintainIndexJob() {
 			super("Task List Indexer");
@@ -520,7 +551,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		}
 
 		@Override
-		protected IStatus run(IProgressMonitor m) {
+		public IStatus run(IProgressMonitor m) {
 			final int WORK_PER_SEGMENT = 1000;
 			SubMonitor monitor = SubMonitor.convert(m, 3 * WORK_PER_SEGMENT);
 			try {
