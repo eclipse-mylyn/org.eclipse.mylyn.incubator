@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Index
+Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: org.eclipse.mylyn.tasks.index.ui;singleton:=true
 Bundle-Version: 3.7.0.qualifier
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

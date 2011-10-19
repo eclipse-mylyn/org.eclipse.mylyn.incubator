@@ -544,7 +544,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	private class MaintainIndexJob extends Job {
 
 		public MaintainIndexJob() {
-			super("Task List Indexer");
+			super(Messages.TaskListIndex_indexerJob);
 			setUser(false);
 			setSystem(false); // true?
 			setPriority(Job.LONG);
@@ -586,7 +586,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 							}
 						}, monitor.newChild(1));
 
-						reindexMonitor.beginTask("Rebuilding Task List Index", allTasks.size());
+						reindexMonitor.beginTask(Messages.TaskListIndex_task_rebuildingIndex, allTasks.size());
 						for (ITask task : allTasks) {
 							try {
 								TaskData taskData = dataManager.getTaskData(task);

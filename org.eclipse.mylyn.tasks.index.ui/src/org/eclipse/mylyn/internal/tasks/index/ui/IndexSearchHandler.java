@@ -59,8 +59,8 @@ public class IndexSearchHandler extends AbstractSearchHandler {
 		GridLayoutFactory.swtDefaults().applyTo(container);
 
 		final Button button = new Button(container, SWT.CHECK);
-		button.setText("Summary only");
-		button.setToolTipText("Search only the summary when checked");
+		button.setText(Messages.IndexSearchHandler_summaryOnly);
+		button.setToolTipText(Messages.IndexSearchHandler_summaryOnly_tooltip);
 		button.setSelection(true);
 
 		button.addSelectionListener(new SelectionAdapter() {
@@ -154,15 +154,15 @@ public class IndexSearchHandler extends AbstractSearchHandler {
 							String description;
 							switch (field) {
 							case CONTENT:
-								description = "Search for a term in the summary, description and comments";
+								description = Messages.IndexSearchHandler_hint_content;
 								break;
 							case PERSON:
-								description = "Search for a user (reporter, assignee, watcher, commenter)";
+								description = Messages.IndexSearchHandler_hint_person;
 								break;
 							default:
-								description = NLS.bind("Search on a term in the {0} field", field.fieldName());
+								description = NLS.bind(Messages.IndexSearchHandler_hint_generic, field.fieldName());
 							}
-							proposals.add(new ContentProposal(field.fieldName().substring(prefix.length()) + ":",
+							proposals.add(new ContentProposal(field.fieldName().substring(prefix.length()) + ":", //$NON-NLS-1$
 									field.fieldName(), description));
 						}
 					}
