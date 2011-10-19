@@ -44,13 +44,18 @@
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>target-platform-configuration</artifactId>
-        <version>${tycho-version}</version>
+        <version>${tycho-version}</version>		
         <configuration>
-          <resolver>p2</resolver>
           <environments>
             <environment>
               <os>win32</os>
+              <ws>win32</ws>
               <arch>x86</arch>
+            </environment>
+            <environment>
+              <os>win32</os>
+              <ws>win32</ws>
+              <arch>x86_64</arch>
             </environment>
           </environments>
         </configuration>
