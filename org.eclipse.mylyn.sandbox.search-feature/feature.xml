@@ -4,9 +4,7 @@
       label="%featureName"
       version="3.7.0.qualifier"
       provider-name="%providerName"
-      plugin="org.eclipse.mylyn"
-      os="win32"
-      arch="x86,x86_64">
+      plugin="org.eclipse.mylyn">
 
    <description url="http://eclipse.org/mylyn">
       %description
