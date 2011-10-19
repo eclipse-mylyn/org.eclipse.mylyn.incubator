@@ -83,7 +83,7 @@ public class TaskListIndexTest {
 		}
 		if (tempDir != null) {
 			delete(tempDir);
-			// FIXME assertFalse(tempDir.exists());
+			assertFalse(tempDir.exists());
 		}
 	}
 
