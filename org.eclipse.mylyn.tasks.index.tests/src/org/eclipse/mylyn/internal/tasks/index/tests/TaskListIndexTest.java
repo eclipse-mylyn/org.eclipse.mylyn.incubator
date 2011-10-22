@@ -18,7 +18,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
@@ -201,4 +203,26 @@ public class TaskListIndexTest {
 		assertTrue(collector.getTasks().contains(task));
 	}
 
+	@Test
+	public void testMatchesRepositoryTaskOnCreationDate() throws InterruptedException, CoreException {
+		setupIndex();
+
+		ITask task = context.createRepositoryTask();
+
+		Date creationDate = task.getCreationDate();
+		assertNotNull(creationDate);
+
+		index.waitUntilIdle();
+
+		assertFalse(index.matches(task, IndexField.CREATION_DATE.fieldName() + ":[20010101 TO 20010105]"));
+
+		String matchDate = new SimpleDateFormat("yyyyMMdd").format(creationDate);
+		matchDate = Integer.toString(Integer.parseInt(matchDate) + 2);
+
+		String patternString = IndexField.CREATION_DATE.fieldName() + ":[20111019 TO " + matchDate + "]";
+
+		System.out.println(patternString);
+
+		assertTrue(index.matches(task, patternString));
+	}
 }

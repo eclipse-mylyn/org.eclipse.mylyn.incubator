@@ -97,7 +97,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		ASSIGNEE(true, TaskAttribute.USER_ASSIGNED), //
 		REPORTER(true, TaskAttribute.USER_REPORTER), //
 		PERSON(true, null), //
-		COMPONTENT(true, TaskAttribute.COMPONENT), //
+		COMPONENT(true, TaskAttribute.COMPONENT), //
 		COMPLETION_DATE(true, null), //
 		CREATION_DATE(true, null), //
 		DUE_DATE(true, null), //
@@ -584,7 +584,9 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	}
 
 	private void addIndexedAttribute(Document document, IndexField indexField, String value) {
-
+		if (value == null) {
+			return;
+		}
 		Field field = document.getField(indexField.fieldName());
 		if (field == null) {
 			field = new Field(indexField.fieldName(), value, Store.YES, org.apache.lucene.document.Field.Index.ANALYZED);
@@ -601,6 +603,9 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		if (date == null) {
 			return;
 		}
+		// FIXME: date tools converts dates to GMT, and we don't really want that.  So
+		// move the date by the GMT offset if there is any
+
 		String value = DateTools.dateToString(date, Resolution.HOUR);
 		Field field = document.getField(indexField.fieldName());
 		if (field == null) {
