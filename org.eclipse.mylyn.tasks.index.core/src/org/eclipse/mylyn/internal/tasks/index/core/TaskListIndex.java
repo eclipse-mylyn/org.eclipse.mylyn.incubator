@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,6 +26,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.DateTools;
+import org.apache.lucene.document.DateTools.Resolution;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Field.Store;
@@ -49,6 +52,7 @@ import org.apache.lucene.util.Version;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -86,16 +90,43 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	private static final Object COMMAND_RESET_INDEX = "index:reset"; //$NON-NLS-1$
 
 	public static enum IndexField {
-		IDENTIFIER(false), SUMMARY(true), CONTENT(true), ASSIGNEE(true), REPORTER(true), PERSON(true);
+		IDENTIFIER(false, null), //
+		TASK_KEY(false, null), //
+		SUMMARY(true, null), //
+		CONTENT(true, null), //
+		ASSIGNEE(true, TaskAttribute.USER_ASSIGNED), //
+		REPORTER(true, TaskAttribute.USER_REPORTER), //
+		PERSON(true, null), //
+		COMPONTENT(true, TaskAttribute.COMPONENT), //
+		COMPLETION_DATE(true, null), //
+		CREATION_DATE(true, null), //
+		DUE_DATE(true, null), //
+		MODIFICATION_DATE(true, null), //
+		DESCRIPTION(true, TaskAttribute.DESCRIPTION), //
+		KEYWORDS(true, TaskAttribute.KEYWORDS), //
+		PRODUCT(true, TaskAttribute.PRODUCT), //
+		RESOLUTION(true, TaskAttribute.RESOLUTION), //
+		SEVERITY(true, TaskAttribute.SEVERITY), //
+		STATUS(true, TaskAttribute.STATUS);
 
 		private final boolean userVisible;
 
-		private IndexField(boolean userVisible) {
+		private final String attributeId;
+
+		private IndexField(boolean userVisible, String attributeId) {
 			this.userVisible = userVisible;
+			this.attributeId = attributeId;
 		}
 
 		public String fieldName() {
 			return name().toLowerCase();
+		}
+
+		/**
+		 * get the task attribute id, or null if this field has special handling
+		 */
+		public String getAttributeId() {
+			return attributeId;
 		}
 
 		public boolean isUserVisible() {
@@ -142,6 +173,8 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	private long startupDelay = 6000L;
 
 	private long reindexDelay = 3000L;
+
+	private int maxMatchSearchHits = 1500;
 
 	private TaskListIndex(TaskList taskList, TaskDataManager dataManager) {
 		if (taskList == null) {
@@ -205,6 +238,14 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	public void setDefaultField(IndexField defaultField) {
 		this.defaultField = defaultField;
 		lastResults = null;
+	}
+
+	public int getMaxMatchSearchHits() {
+		return maxMatchSearchHits;
+	}
+
+	public void setMaxMatchSearchHits(int maxMatchSearchHits) {
+		this.maxMatchSearchHits = maxMatchSearchHits;
 	}
 
 	private void initialize() {
@@ -271,7 +312,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 					IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 					try {
 						Query query = computeQuery(patternString);
-						TopDocs results = indexSearcher.search(query, 1500);
+						TopDocs results = indexSearcher.search(query, maxMatchSearchHits);
 						for (ScoreDoc scoreDoc : results.scoreDocs) {
 							Document document = indexReader.document(scoreDoc.doc);
 							hits.add(document.get(IndexField.IDENTIFIER.fieldName()));
@@ -284,7 +325,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 						try {
 							indexSearcher.close();
 						} catch (IOException e) {
-							e.printStackTrace();
+							// ignore
 						}
 					}
 
@@ -311,7 +352,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	 * @throws InterruptedException
 	 */
 	public void waitUntilIdle() throws InterruptedException {
-		if (!Platform.isRunning()) {
+		if (!Platform.isRunning() && reindexDelay != 0L) {
 			// job join() behaviour is not the same when platform is not running
 			Logger.getLogger(TaskListIndex.class.getName()).warning(
 					"Index job joining may not work properly when Eclipse platform is not running"); //$NON-NLS-1$
@@ -474,15 +515,18 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		scheduleIndexMaintenance(MaintainIndexType.REINDEX);
 	}
 
-	private void addIndexedAttributes(Document document, TaskAttribute parentAttribute) {
-		addIndexedAttribute(document, IndexField.SUMMARY, parentAttribute.getMappedAttribute(TaskAttribute.SUMMARY));
-		addIndexedAttribute(document, IndexField.CONTENT, parentAttribute.getMappedAttribute(TaskAttribute.SUMMARY));
-		addIndexedAttribute(document, IndexField.CONTENT, parentAttribute.getMappedAttribute(TaskAttribute.DESCRIPTION));
-		addIndexedAttribute(document, IndexField.CONTENT, parentAttribute.getAttribute("status_whiteboard")); //$NON-NLS-1$
+	private void addIndexedAttributes(Document document, ITask task, TaskAttribute root) {
+		addIndexedAttribute(document, IndexField.SUMMARY, root.getMappedAttribute(TaskAttribute.SUMMARY));
+		addIndexedAttribute(document, IndexField.TASK_KEY, task.getTaskKey());
+		addIndexedAttribute(document, IndexField.CONTENT, root.getMappedAttribute(TaskAttribute.SUMMARY));
+		addIndexedAttribute(document, IndexField.CONTENT, root.getMappedAttribute(TaskAttribute.DESCRIPTION));
+		addIndexedAttribute(document, IndexField.CONTENT, root.getAttribute("status_whiteboard")); //$NON-NLS-1$
 
-		List<TaskAttribute> commentAttributes = parentAttribute.getTaskData()
+		addIndexedDateAttributes(document, task);
+
+		List<TaskAttribute> commentAttributes = root.getTaskData()
 				.getAttributeMapper()
-				.getAttributesByType(parentAttribute.getTaskData(), TaskAttribute.TYPE_COMMENT);
+				.getAttributesByType(root.getTaskData(), TaskAttribute.TYPE_COMMENT);
 		for (TaskAttribute commentAttribute : commentAttributes) {
 			TaskCommentMapper commentMapper = TaskCommentMapper.createFrom(commentAttribute);
 			String text = commentMapper.getText();
@@ -490,26 +534,38 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 				addIndexedAttribute(document, IndexField.CONTENT, text);
 			}
 			IRepositoryPerson author = commentMapper.getAuthor();
-			addIndexedAttribute(document, IndexField.PERSON, author.getPersonId());
+			if (author != null) {
+				addIndexedAttribute(document, IndexField.PERSON, author.getPersonId());
+			}
 		}
 
-		List<TaskAttribute> personAttributes = parentAttribute.getTaskData()
+		List<TaskAttribute> personAttributes = root.getTaskData()
 				.getAttributeMapper()
-				.getAttributesByType(parentAttribute.getTaskData(), TaskAttribute.TYPE_PERSON);
+				.getAttributesByType(root.getTaskData(), TaskAttribute.TYPE_PERSON);
 		for (TaskAttribute personAttribute : personAttributes) {
 			addIndexedAttribute(document, IndexField.PERSON, personAttribute);
 		}
-		addIndexedAttribute(document, IndexField.ASSIGNEE,
-				parentAttribute.getMappedAttribute(TaskAttribute.USER_ASSIGNED));
-		addIndexedAttribute(document, IndexField.REPORTER,
-				parentAttribute.getMappedAttribute(TaskAttribute.USER_REPORTER));
 
+		for (IndexField field : IndexField.values()) {
+			if (field.getAttributeId() != null) {
+				addIndexedAttribute(document, field, root.getMappedAttribute(field.getAttributeId()));
+			}
+		}
 	}
 
 	private void addIndexedAttributes(Document document, ITask task) {
 		addIndexedAttribute(document, IndexField.SUMMARY, task.getSummary());
+		addIndexedAttribute(document, IndexField.TASK_KEY, task.getTaskKey());
 		addIndexedAttribute(document, IndexField.CONTENT, task.getSummary());
 		addIndexedAttribute(document, IndexField.CONTENT, ((AbstractTask) task).getNotes());
+		addIndexedDateAttributes(document, task);
+	}
+
+	private void addIndexedDateAttributes(Document document, ITask task) {
+		addIndexedAttribute(document, IndexField.COMPLETION_DATE, task.getCompletionDate());
+		addIndexedAttribute(document, IndexField.CREATION_DATE, task.getCreationDate());
+		addIndexedAttribute(document, IndexField.DUE_DATE, task.getDueDate());
+		addIndexedAttribute(document, IndexField.MODIFICATION_DATE, task.getModificationDate());
 	}
 
 	private void addIndexedAttribute(Document document, IndexField indexField, TaskAttribute attribute) {
@@ -541,6 +597,20 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		}
 	}
 
+	private void addIndexedAttribute(Document document, IndexField indexField, Date date) {
+		if (date == null) {
+			return;
+		}
+		String value = DateTools.dateToString(date, Resolution.HOUR);
+		Field field = document.getField(indexField.fieldName());
+		if (field == null) {
+			field = new Field(indexField.fieldName(), value, Store.YES, org.apache.lucene.document.Field.Index.ANALYZED);
+			document.add(field);
+		} else {
+			field.setValue(value);
+		}
+	}
+
 	private class MaintainIndexJob extends Job {
 
 		public MaintainIndexJob() {
@@ -555,113 +625,126 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 			final int WORK_PER_SEGMENT = 1000;
 			SubMonitor monitor = SubMonitor.convert(m, 3 * WORK_PER_SEGMENT);
 			try {
-				if (monitor.isCanceled()) {
-					return Status.CANCEL_STATUS;
-				}
-				if (!rebuildIndex) {
-					try {
-						IndexReader reader = IndexReader.open(directory, false);
-						reader.close();
-					} catch (CorruptIndexException e) {
-						rebuildIndex = true;
+				try {
+					if (monitor.isCanceled()) {
+						return Status.CANCEL_STATUS;
 					}
-				}
-
-				if (rebuildIndex) {
-					synchronized (reindexQueue) {
-						reindexQueue.clear();
-					}
-
-					SubMonitor reindexMonitor = monitor.newChild(WORK_PER_SEGMENT);
-
-					final IndexWriter writer = new IndexWriter(directory, new TaskAnalyzer(), true,
-							IndexWriter.MaxFieldLength.UNLIMITED);
-					try {
-
-						final List<ITask> allTasks = new ArrayList<ITask>(5000);
-
-						taskList.run(new ITaskListRunnable() {
-							public void execute(IProgressMonitor monitor) throws CoreException {
-								allTasks.addAll(taskList.getAllTasks());
-							}
-						}, monitor.newChild(1));
-
-						reindexMonitor.beginTask(Messages.TaskListIndex_task_rebuildingIndex, allTasks.size());
-						for (ITask task : allTasks) {
-							try {
-								TaskData taskData = dataManager.getTaskData(task);
-								add(writer, task, taskData);
-
-								reindexMonitor.worked(1);
-							} catch (CoreException e) {
-								// fixme: how to handle local tasks with no task
-								// data?
-							} catch (IOException e) {
-								throw e;
-							}
-						}
-						synchronized (TaskListIndex.this) {
-							rebuildIndex = false;
-						}
-					} finally {
-						writer.close();
-						reindexMonitor.done();
-					}
-				} else {
-					monitor.worked(WORK_PER_SEGMENT);
-				}
-				for (;;) {
-
-					synchronized (reindexQueue) {
-						if (reindexQueue.isEmpty()) {
-							break;
+					if (!rebuildIndex) {
+						try {
+							IndexReader reader = IndexReader.open(directory, false);
+							reader.close();
+						} catch (CorruptIndexException e) {
+							rebuildIndex = true;
 						}
 					}
 
-					Map<ITask, TaskData> queue = new HashMap<ITask, TaskData>();
-
-					IndexReader reader = IndexReader.open(directory, false);
-					try {
+					if (rebuildIndex) {
 						synchronized (reindexQueue) {
-							queue.putAll(reindexQueue);
-							for (ITask task : queue.keySet()) {
-								reindexQueue.remove(task);
+							reindexQueue.clear();
+						}
+
+						SubMonitor reindexMonitor = monitor.newChild(WORK_PER_SEGMENT);
+
+						final IndexWriter writer = new IndexWriter(directory, new TaskAnalyzer(), true,
+								IndexWriter.MaxFieldLength.UNLIMITED);
+						try {
+
+							final List<ITask> allTasks = new ArrayList<ITask>(5000);
+
+							taskList.run(new ITaskListRunnable() {
+								public void execute(IProgressMonitor monitor) throws CoreException {
+									allTasks.addAll(taskList.getAllTasks());
+								}
+							}, monitor.newChild(1));
+
+							int reindexErrorCount = 0;
+
+							reindexMonitor.beginTask(Messages.TaskListIndex_task_rebuildingIndex, allTasks.size());
+							for (ITask task : allTasks) {
+								try {
+									TaskData taskData = dataManager.getTaskData(task);
+									add(writer, task, taskData);
+
+									reindexMonitor.worked(1);
+								} catch (CoreException e) {
+									// an individual task data error should not prevent the index from updating
+									// but don't flood the log in the case of multiple errors
+									if (reindexErrorCount++ == 0) {
+										StatusHandler.log(e.getStatus());
+									}
+								} catch (IOException e) {
+									throw e;
+								}
+							}
+							synchronized (TaskListIndex.this) {
+								rebuildIndex = false;
+							}
+						} finally {
+							writer.close();
+							reindexMonitor.done();
+						}
+					} else {
+						monitor.worked(WORK_PER_SEGMENT);
+					}
+					for (;;) {
+
+						synchronized (reindexQueue) {
+							if (reindexQueue.isEmpty()) {
+								break;
 							}
 						}
-						Iterator<Entry<ITask, TaskData>> it = queue.entrySet().iterator();
-						while (it.hasNext()) {
-							Entry<ITask, TaskData> entry = it.next();
 
-							reader.deleteDocuments(new Term(IndexField.IDENTIFIER.fieldName(), entry.getKey()
-									.getHandleIdentifier()));
+						Map<ITask, TaskData> queue = new HashMap<ITask, TaskData>();
 
+						IndexReader reader = IndexReader.open(directory, false);
+						try {
+							synchronized (reindexQueue) {
+								queue.putAll(reindexQueue);
+								for (ITask task : queue.keySet()) {
+									reindexQueue.remove(task);
+								}
+							}
+							Iterator<Entry<ITask, TaskData>> it = queue.entrySet().iterator();
+							while (it.hasNext()) {
+								Entry<ITask, TaskData> entry = it.next();
+
+								reader.deleteDocuments(new Term(IndexField.IDENTIFIER.fieldName(), entry.getKey()
+										.getHandleIdentifier()));
+
+							}
+						} finally {
+							reader.close();
 						}
-					} finally {
-						reader.close();
-					}
-					monitor.worked(WORK_PER_SEGMENT);
+						monitor.worked(WORK_PER_SEGMENT);
 
-					IndexWriter writer = new IndexWriter(directory, new TaskAnalyzer(), false,
-							IndexWriter.MaxFieldLength.UNLIMITED);
-					try {
-						for (Entry<ITask, TaskData> entry : queue.entrySet()) {
-							ITask task = entry.getKey();
-							TaskData taskData = entry.getValue();
+						IndexWriter writer = new IndexWriter(directory, new TaskAnalyzer(), false,
+								IndexWriter.MaxFieldLength.UNLIMITED);
+						try {
+							for (Entry<ITask, TaskData> entry : queue.entrySet()) {
+								ITask task = entry.getKey();
+								TaskData taskData = entry.getValue();
 
-							add(writer, task, taskData);
+								add(writer, task, taskData);
+							}
+						} finally {
+							writer.close();
 						}
-					} finally {
-						writer.close();
+						monitor.worked(WORK_PER_SEGMENT);
 					}
-					monitor.worked(WORK_PER_SEGMENT);
-				}
-				synchronized (TaskListIndex.this) {
-					indexReader = null;
+					synchronized (TaskListIndex.this) {
+						indexReader = null;
+					}
+				} catch (CoreException e) {
+					throw e;
+				} catch (Throwable e) {
+					throw new CoreException(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
+							"Unexpected exception: " + e.getMessage(), e)); //$NON-NLS-1$
 				}
 			} catch (CoreException e) {
-				return e.getStatus();
-			} catch (IOException e) {
-				return new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID, "Cannot update index: " + e.getMessage(), e); //$NON-NLS-1$
+				MultiStatus logStatus = new MultiStatus(TasksIndexCore.BUNDLE_ID, 0,
+						"Failed to update task list index", e); //$NON-NLS-1$
+				logStatus.add(e.getStatus());
+				StatusHandler.log(logStatus);
 			} finally {
 				monitor.done();
 			}
@@ -690,7 +773,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 					return;
 				}
 			} else {
-				addIndexedAttributes(document, taskData.getRoot());
+				addIndexedAttributes(document, task, taskData.getRoot());
 			}
 			writer.addDocument(document);
 		}

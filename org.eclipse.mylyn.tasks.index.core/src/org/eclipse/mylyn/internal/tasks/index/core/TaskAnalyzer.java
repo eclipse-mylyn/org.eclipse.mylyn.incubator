@@ -26,9 +26,7 @@ class TaskAnalyzer extends PerFieldAnalyzerWrapper {
 	public TaskAnalyzer() {
 		super(new StandardAnalyzer(Version.LUCENE_CURRENT));
 		addAnalyzer(TaskListIndex.IndexField.IDENTIFIER.fieldName(), new KeywordAnalyzer());
-		addAnalyzer(TaskListIndex.IndexField.REPORTER.fieldName(), new StandardAnalyzer(Version.LUCENE_CURRENT));
-		addAnalyzer(TaskListIndex.IndexField.ASSIGNEE.fieldName(), new StandardAnalyzer(Version.LUCENE_CURRENT));
-		addAnalyzer(TaskListIndex.IndexField.PERSON.fieldName(), new StandardAnalyzer(Version.LUCENE_CURRENT));
+		addAnalyzer(TaskListIndex.IndexField.TASK_KEY.fieldName(), new KeywordAnalyzer());
 	}
 
 }
