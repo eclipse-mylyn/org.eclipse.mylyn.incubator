@@ -90,32 +90,35 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	private static final Object COMMAND_RESET_INDEX = "index:reset"; //$NON-NLS-1$
 
 	public static enum IndexField {
-		IDENTIFIER(false, null), //
-		TASK_KEY(false, null), //
-		SUMMARY(true, null), //
-		CONTENT(true, null), //
-		ASSIGNEE(true, TaskAttribute.USER_ASSIGNED), //
-		REPORTER(true, TaskAttribute.USER_REPORTER), //
-		PERSON(true, null), //
-		COMPONENT(true, TaskAttribute.COMPONENT), //
-		COMPLETION_DATE(true, null), //
-		CREATION_DATE(true, null), //
-		DUE_DATE(true, null), //
-		MODIFICATION_DATE(true, null), //
-		DESCRIPTION(true, TaskAttribute.DESCRIPTION), //
-		KEYWORDS(true, TaskAttribute.KEYWORDS), //
-		PRODUCT(true, TaskAttribute.PRODUCT), //
-		RESOLUTION(true, TaskAttribute.RESOLUTION), //
-		SEVERITY(true, TaskAttribute.SEVERITY), //
-		STATUS(true, TaskAttribute.STATUS);
+		IDENTIFIER(false, null, false), //
+		TASK_KEY(false, null, false), //
+		SUMMARY(true, null, false), //
+		CONTENT(true, null, false), //
+		ASSIGNEE(true, TaskAttribute.USER_ASSIGNED, false), //
+		REPORTER(true, TaskAttribute.USER_REPORTER, false), //
+		PERSON(true, null, false), //
+		COMPONENT(true, TaskAttribute.COMPONENT, false), //
+		COMPLETION_DATE(true, null, true), //
+		CREATION_DATE(true, null, true), //
+		DUE_DATE(true, null, true), //
+		MODIFICATION_DATE(true, null, true), //
+		DESCRIPTION(true, TaskAttribute.DESCRIPTION, false), //
+		KEYWORDS(true, TaskAttribute.KEYWORDS, false), //
+		PRODUCT(true, TaskAttribute.PRODUCT, false), //
+		RESOLUTION(true, TaskAttribute.RESOLUTION, false), //
+		SEVERITY(true, TaskAttribute.SEVERITY, false), //
+		STATUS(true, TaskAttribute.STATUS, false);
 
 		private final boolean userVisible;
 
 		private final String attributeId;
 
-		private IndexField(boolean userVisible, String attributeId) {
+		private final boolean dateTime;
+
+		private IndexField(boolean userVisible, String attributeId, boolean dateTime) {
 			this.userVisible = userVisible;
 			this.attributeId = attributeId;
+			this.dateTime = dateTime;
 		}
 
 		public String fieldName() {
@@ -129,8 +132,18 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 			return attributeId;
 		}
 
+		/**
+		 * indicate if the field should be exposed in the UI
+		 */
 		public boolean isUserVisible() {
 			return userVisible;
+		}
+
+		/**
+		 * indicate if the field is a date/time field
+		 */
+		public boolean isDateTime() {
+			return dateTime;
 		}
 
 		public static IndexField fromFieldName(String fieldName) {
@@ -785,4 +798,19 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 
 	}
 
+	/**
+	 * Computes a query element for a field that must lie in a specified date range.
+	 * 
+	 * @param field
+	 *            the field
+	 * @param lowerBoundInclusive
+	 *            the date lower bound that the field value must match, inclusive
+	 * @param upperBoundInclusive
+	 *            the date upper bound that the field value must match, inclusive
+	 * @return
+	 */
+	public String computeQueryFieldDateRange(IndexField field, Date lowerBoundInclusive, Date upperBoundInclusive) {
+		return field.fieldName()
+				+ ":[" + DateTools.dateToString(lowerBoundInclusive, Resolution.DAY) + " TO " + DateTools.dateToString(upperBoundInclusive, Resolution.DAY) + "]"; //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+	}
 }

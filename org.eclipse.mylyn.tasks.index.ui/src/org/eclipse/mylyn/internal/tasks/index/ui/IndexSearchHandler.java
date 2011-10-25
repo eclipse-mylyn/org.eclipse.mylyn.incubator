@@ -11,7 +11,10 @@
 package org.eclipse.mylyn.internal.tasks.index.ui;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -142,6 +145,9 @@ public class IndexSearchHandler extends AbstractSearchHandler {
 					}
 
 				} else {
+					GregorianCalendar calendar = new GregorianCalendar();
+					final Date now = new Date();
+
 					// suggest field name prefixes
 					for (IndexField field : IndexField.values()) {
 
@@ -164,6 +170,22 @@ public class IndexSearchHandler extends AbstractSearchHandler {
 							}
 							proposals.add(new ContentProposal(field.fieldName().substring(prefix.length()) + ":", //$NON-NLS-1$
 									field.fieldName(), description));
+
+							if (field.isDateTime()) {
+								description = NLS.bind(Messages.IndexSearchHandler_Generic_date_range_search_1_week,
+										field.fieldName());
+
+								calendar.setTime(now);
+								calendar.add(Calendar.DAY_OF_WEEK, 1); // one day in future due to GMT conversion in index
+								Date upperBound = calendar.getTime();
+
+								calendar.setTime(now);
+								calendar.add(Calendar.DAY_OF_WEEK, -7);
+								Date lowerBound = calendar.getTime();
+
+								proposals.add(new ContentProposal(index.computeQueryFieldDateRange(field, lowerBound,
+										upperBound), field.fieldName(), description));
+							}
 						}
 					}
 				}

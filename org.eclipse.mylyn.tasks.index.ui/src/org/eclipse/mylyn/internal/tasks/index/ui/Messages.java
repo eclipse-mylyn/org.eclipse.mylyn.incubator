@@ -19,6 +19,8 @@ import org.eclipse.osgi.util.NLS;
 class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.eclipse.mylyn.internal.tasks.index.ui.messages"; //$NON-NLS-1$
 
+	public static String IndexSearchHandler_Generic_date_range_search_1_week;
+
 	public static String IndexSearchHandler_hint_content;
 
 	public static String IndexSearchHandler_hint_generic;
