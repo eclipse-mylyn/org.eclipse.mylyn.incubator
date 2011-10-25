@@ -27,6 +27,8 @@ class Messages extends NLS {
 
 	public static String IndexSearchHandler_hint_person;
 
+	public static String IndexSearchHandler_Past_week_date_range_label;
+
 	public static String IndexSearchHandler_summaryOnly;
 
 	public static String IndexSearchHandler_summaryOnly_tooltip;

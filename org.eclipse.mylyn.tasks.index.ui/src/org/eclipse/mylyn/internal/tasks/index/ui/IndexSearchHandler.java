@@ -145,8 +145,20 @@ public class IndexSearchHandler extends AbstractSearchHandler {
 					}
 
 				} else {
-					GregorianCalendar calendar = new GregorianCalendar();
 					final Date now = new Date();
+					final Date dateSearchUpperBound;
+					final Date dateSearchOneWeekLowerBound;
+					{
+						GregorianCalendar calendar = new GregorianCalendar();
+
+						calendar.setTime(now);
+						calendar.add(Calendar.DAY_OF_WEEK, 1); // one day in future due to GMT conversion in index
+						dateSearchUpperBound = calendar.getTime();
+
+						calendar.setTime(now);
+						calendar.add(Calendar.DAY_OF_WEEK, -7);
+						dateSearchOneWeekLowerBound = calendar.getTime();
+					}
 
 					// suggest field name prefixes
 					for (IndexField field : IndexField.values()) {
@@ -171,20 +183,16 @@ public class IndexSearchHandler extends AbstractSearchHandler {
 							proposals.add(new ContentProposal(field.fieldName().substring(prefix.length()) + ":", //$NON-NLS-1$
 									field.fieldName(), description));
 
+							// for date fields give suggestion of date range search
 							if (field.isDateTime()) {
 								description = NLS.bind(Messages.IndexSearchHandler_Generic_date_range_search_1_week,
 										field.fieldName());
 
-								calendar.setTime(now);
-								calendar.add(Calendar.DAY_OF_WEEK, 1); // one day in future due to GMT conversion in index
-								Date upperBound = calendar.getTime();
+								String label = NLS.bind(Messages.IndexSearchHandler_Past_week_date_range_label, field.fieldName());
 
-								calendar.setTime(now);
-								calendar.add(Calendar.DAY_OF_WEEK, -7);
-								Date lowerBound = calendar.getTime();
-
-								proposals.add(new ContentProposal(index.computeQueryFieldDateRange(field, lowerBound,
-										upperBound), field.fieldName(), description));
+								String queryText = index.computeQueryFieldDateRange(field, dateSearchOneWeekLowerBound,
+										dateSearchUpperBound);
+								proposals.add(new ContentProposal(queryText, label, description));
 							}
 						}
 					}
