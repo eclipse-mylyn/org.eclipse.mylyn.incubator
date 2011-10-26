@@ -215,7 +215,10 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		this.startupDelay = startupDelay;
 		if (!indexLocation.exists()) {
 			rebuildIndex = true;
-			indexLocation.mkdirs();
+			if (!indexLocation.mkdirs()) {
+				StatusHandler.log(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
+						"Cannot create task list index folder: " + indexLocation)); //$NON-NLS-1$
+			}
 		}
 		if (indexLocation.exists() && indexLocation.isDirectory()) {
 			try {
