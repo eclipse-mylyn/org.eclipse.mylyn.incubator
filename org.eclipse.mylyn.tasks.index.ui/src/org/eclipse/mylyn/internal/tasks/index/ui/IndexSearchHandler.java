@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.mylyn.internal.tasks.index.ui;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -20,8 +21,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.fieldassist.ContentProposal;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
@@ -83,9 +82,8 @@ public class IndexSearchHandler extends AbstractSearchHandler {
 		synchronized (IndexSearchHandler.class) {
 			if (index == null) {
 				if (theIndex == null) {
-					// FIXME: multiple instances
 					theIndex = new TaskListIndex(TasksUiPlugin.getTaskList(), TasksUiPlugin.getTaskDataManager(),
-							Platform.getBundle(TasksIndexUi.BUNDLE_ID).getDataFile(".taskListIndex")); //$NON-NLS-1$
+							new File(TasksUiPlugin.getDefault().getDataDirectory(), ".taskListIndex")); //$NON-NLS-1$
 				}
 				index = theIndex;
 				referenceCount.incrementAndGet();
@@ -188,7 +186,8 @@ public class IndexSearchHandler extends AbstractSearchHandler {
 								description = NLS.bind(Messages.IndexSearchHandler_Generic_date_range_search_1_week,
 										field.fieldName());
 
-								String label = NLS.bind(Messages.IndexSearchHandler_Past_week_date_range_label, field.fieldName());
+								String label = NLS.bind(Messages.IndexSearchHandler_Past_week_date_range_label,
+										field.fieldName());
 
 								String queryText = index.computeQueryFieldDateRange(field, dateSearchOneWeekLowerBound,
 										dateSearchUpperBound);
