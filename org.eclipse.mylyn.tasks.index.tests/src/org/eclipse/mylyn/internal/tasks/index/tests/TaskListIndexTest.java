@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.mylyn.commons.core.DelegatingProgressMonitor;
@@ -103,7 +104,9 @@ public class TaskListIndexTest {
 				}
 			}
 		}
-		file.delete();
+		if (!file.delete()) {
+			Logger.getLogger(TaskListIndexTest.class.getName()).severe("Cannot delete: " + file);
+		}
 	}
 
 	private void setupIndex() {
@@ -279,5 +282,40 @@ public class TaskListIndexTest {
 				"*", "?", ":", "\\" }) {
 			assertEquals("a\\" + special + "b", index.escapeFieldValue("a" + special + "b"));
 		}
+	}
+
+	@Test
+	public void testAttributeMetadataAffectsIndexing() throws CoreException, InterruptedException {
+		setupIndex();
+
+		ITask repositoryTask = context.createRepositoryTask();
+
+		index.waitUntilIdle();
+		index.setDefaultField(IndexField.CONTENT);
+
+		TaskData taskData = context.getDataManager().getTaskData(repositoryTask);
+
+		// sanity
+		assertNotNull(taskData);
+
+		final String content = "c" + System.currentTimeMillis();
+
+		// setup data so that it will match
+		TaskAttribute attribute = taskData.getRoot().createAttribute("unusualIndexedAttribute");
+		attribute.setValue(content);
+
+		// update
+		context.getDataManager().putSubmittedTaskData(repositoryTask, taskData, new DelegatingProgressMonitor());
+
+		// verify index doesn't match search term
+		assertFalse(index.matches(repositoryTask, content));
+
+		// now make data indexable
+		attribute.getMetaData().putValue(TaskListIndex.META_INDEXED_AS_CONTENT, "true");
+		// update
+		context.getDataManager().putSubmittedTaskData(repositoryTask, taskData, new DelegatingProgressMonitor());
+
+		// should now match
+		assertTrue(index.matches(repositoryTask, content));
 	}
 }

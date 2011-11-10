@@ -15,10 +15,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -87,6 +89,13 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	}
 
 	private static final Object COMMAND_RESET_INDEX = "index:reset"; //$NON-NLS-1$
+
+	/**
+	 * Task attribute meta-data key that should be set to "true" to have attribute value indexed as part of the task
+	 * {@link IndexField#CONTENT}. Provides a way for connectors to specify non-standard attributes as indexable. By
+	 * default, {@link TaskAttribute#SUMMARY summary} and {@link TaskAttribute#DESCRIPTION description} are indexed.
+	 */
+	public static final String META_INDEXED_AS_CONTENT = "index-content"; //$NON-NLS-1$
 
 	public static enum IndexField {
 		IDENTIFIER(false, null, false), //
@@ -253,7 +262,9 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 
 	public void setDefaultField(IndexField defaultField) {
 		this.defaultField = defaultField;
-		lastResults = null;
+		synchronized (this) {
+			lastResults = null;
+		}
 	}
 
 	public int getMaxMatchSearchHits() {
@@ -317,7 +328,6 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 			Set<String> hits;
 
 			synchronized (indexReader) {
-
 				if (lastResults == null || (lastPatternString == null || !lastPatternString.equals(patternString))) {
 					this.lastPatternString = patternString;
 
@@ -333,7 +343,6 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 							Document document = indexReader.document(scoreDoc.doc);
 							hits.add(document.get(IndexField.IDENTIFIER.fieldName()));
 						}
-						lastResults = hits;
 					} catch (IOException e) {
 						StatusHandler.fail(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
 								"Unexpected failure within task list index", e)); //$NON-NLS-1$
@@ -349,6 +358,12 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 							"New query in " + (System.currentTimeMillis() - startTime) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
 				} else {
 					hits = lastResults;
+				}
+			}
+			synchronized (this) {
+				if (this.indexReader == indexReader) {
+					this.lastPatternString = patternString;
+					this.lastResults = hits;
 				}
 			}
 			String taskIdentifier = task.getHandleIdentifier();
@@ -477,6 +492,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 			synchronized (this) {
 				if (indexReader == null) {
 					indexReader = IndexReader.open(directory, true);
+					lastResults = null;
 				}
 				return indexReader;
 			}
@@ -534,9 +550,10 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		addIndexedAttribute(document, IndexField.TASK_KEY, task.getTaskKey());
 		addIndexedAttribute(document, IndexField.REPOSITORY_URL, task.getRepositoryUrl());
 		addIndexedAttribute(document, IndexField.SUMMARY, root.getMappedAttribute(TaskAttribute.SUMMARY));
-		addIndexedAttribute(document, IndexField.CONTENT, root.getMappedAttribute(TaskAttribute.SUMMARY));
-		addIndexedAttribute(document, IndexField.CONTENT, root.getMappedAttribute(TaskAttribute.DESCRIPTION));
-		addIndexedAttribute(document, IndexField.CONTENT, root.getAttribute("status_whiteboard")); //$NON-NLS-1$
+
+		for (TaskAttribute contentAttribute : computeContentAttributes(root)) {
+			addIndexedAttribute(document, IndexField.CONTENT, contentAttribute);
+		}
 
 		addIndexedDateAttributes(document, task);
 
@@ -567,6 +584,38 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 				addIndexedAttribute(document, field, root.getMappedAttribute(field.getAttributeId()));
 			}
 		}
+	}
+
+	/**
+	 * compute attributes that should be indexed as {@link IndexField#CONTENT}
+	 */
+	private Collection<TaskAttribute> computeContentAttributes(TaskAttribute root) {
+		Set<TaskAttribute> attributes = new LinkedHashSet<TaskAttribute>();
+
+		// add default content attributes
+		{
+			TaskAttribute attribute = root.getMappedAttribute(TaskAttribute.SUMMARY);
+			if (attribute != null) {
+				attributes.add(attribute);
+			}
+			attribute = root.getMappedAttribute(TaskAttribute.DESCRIPTION);
+			if (attribute != null) {
+				attributes.add(attribute);
+			}
+			// bugzilla
+			attribute = root.getAttribute("status_whiteboard"); //$NON-NLS-1$
+			if (attribute != null) {
+				attributes.add(attribute);
+			}
+		}
+
+		for (TaskAttribute attribute : root.getAttributes().values()) {
+			if (Boolean.parseBoolean(attribute.getMetaData().getValue(META_INDEXED_AS_CONTENT))) {
+				attributes.add(attribute);
+			}
+		}
+
+		return attributes;
 	}
 
 	private void addIndexedAttributes(Document document, ITask task) {
@@ -754,7 +803,12 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 						monitor.worked(WORK_PER_SEGMENT);
 					}
 					synchronized (TaskListIndex.this) {
-						indexReader = null;
+						if (indexReader != null) {
+							synchronized (indexReader) {
+								indexReader.close();
+							}
+							indexReader = null;
+						}
 					}
 				} catch (CoreException e) {
 					throw e;
