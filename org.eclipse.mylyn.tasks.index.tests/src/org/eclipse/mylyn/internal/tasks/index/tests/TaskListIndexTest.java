@@ -21,15 +21,20 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.mylyn.commons.core.DelegatingProgressMonitor;
+import org.eclipse.mylyn.internal.tasks.core.AbstractTask;
 import org.eclipse.mylyn.internal.tasks.core.LocalTask;
 import org.eclipse.mylyn.internal.tasks.index.core.TaskListIndex;
 import org.eclipse.mylyn.internal.tasks.index.core.TaskListIndex.IndexField;
 import org.eclipse.mylyn.internal.tasks.index.core.TaskListIndex.TaskCollector;
 import org.eclipse.mylyn.internal.tasks.index.tests.util.MockTestContext;
 import org.eclipse.mylyn.tasks.core.ITask;
+import org.eclipse.mylyn.tasks.core.data.TaskAttribute;
 import org.eclipse.mylyn.tasks.core.data.TaskData;
 import org.eclipse.mylyn.tasks.core.data.TaskMapper;
 import org.junit.After;
@@ -224,5 +229,55 @@ public class TaskListIndexTest {
 		System.out.println(patternString);
 
 		assertTrue(index.matches(task, patternString));
+	}
+
+	@Test
+	public void testMatchesOnRepositoryUrl() throws Exception {
+		setupIndex();
+
+		ITask repositoryTask = context.createRepositoryTask();
+		ITask localTask = context.createLocalTask();
+
+		index.waitUntilIdle();
+
+		index.setDefaultField(IndexField.CONTENT);
+
+		TaskData taskData = context.getDataManager().getTaskData(repositoryTask);
+
+		// sanity
+		assertNotNull(taskData);
+		assertNotNull(taskData.getRepositoryUrl());
+		assertFalse(taskData.getRepositoryUrl().length() == 0);
+
+		// setup descriptions so that they will both match
+		final String content = "RepositoryUrl";
+		taskData.getRoot().getMappedAttribute(TaskAttribute.DESCRIPTION).setValue(content);
+		((AbstractTask) localTask).setNotes(content);
+
+		context.getDataManager().putSubmittedTaskData(repositoryTask, taskData, new DelegatingProgressMonitor());
+
+		Set<ITask> changedElements = new HashSet<ITask>();
+		changedElements.add(localTask);
+		changedElements.add(repositoryTask);
+		context.getTaskList().notifyElementsChanged(changedElements);
+
+		index.waitUntilIdle();
+
+		assertTrue(index.matches(localTask, content));
+		assertTrue(index.matches(repositoryTask, content));
+
+		String repositoryUrlQuery = content + " AND " + IndexField.REPOSITORY_URL.fieldName() + ":\""
+				+ index.escapeFieldValue(repositoryTask.getRepositoryUrl()) + "\"";
+		assertFalse(index.matches(localTask, repositoryUrlQuery));
+		assertTrue(index.matches(repositoryTask, repositoryUrlQuery));
+	}
+
+	@Test
+	public void testCharacterEscaping() {
+		setupIndex();
+		for (String special : new String[] { "+", "-", "&&", "||", "!", "(", ")", "{", "}", "[", "]", "^", "\"", "~",
+				"*", "?", ":", "\\" }) {
+			assertEquals("a\\" + special + "b", index.escapeFieldValue("a" + special + "b"));
+		}
 	}
 }

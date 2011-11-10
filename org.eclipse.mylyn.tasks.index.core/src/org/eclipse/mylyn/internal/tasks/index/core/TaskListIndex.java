@@ -25,7 +25,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.DateTools.Resolution;
 import org.apache.lucene.document.Document;
@@ -92,6 +91,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	public static enum IndexField {
 		IDENTIFIER(false, null, false), //
 		TASK_KEY(false, null, false), //
+		REPOSITORY_URL(false, null, false), //
 		SUMMARY(true, null, false), //
 		CONTENT(true, null, false), //
 		ASSIGNEE(true, TaskAttribute.USER_ASSIGNED, false), //
@@ -414,8 +414,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 				&& patternString.indexOf('"') == -1) {
 			return new PrefixQuery(new Term(defaultField.fieldName(), patternString));
 		}
-		QueryParser qp = new QueryParser(Version.LUCENE_CURRENT, defaultField.fieldName(), new StandardAnalyzer(
-				Version.LUCENE_CURRENT));
+		QueryParser qp = new QueryParser(Version.LUCENE_CURRENT, defaultField.fieldName(), new TaskAnalyzer());
 		Query q;
 		try {
 			q = qp.parse(patternString);
@@ -532,8 +531,9 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	}
 
 	private void addIndexedAttributes(Document document, ITask task, TaskAttribute root) {
-		addIndexedAttribute(document, IndexField.SUMMARY, root.getMappedAttribute(TaskAttribute.SUMMARY));
 		addIndexedAttribute(document, IndexField.TASK_KEY, task.getTaskKey());
+		addIndexedAttribute(document, IndexField.REPOSITORY_URL, task.getRepositoryUrl());
+		addIndexedAttribute(document, IndexField.SUMMARY, root.getMappedAttribute(TaskAttribute.SUMMARY));
 		addIndexedAttribute(document, IndexField.CONTENT, root.getMappedAttribute(TaskAttribute.SUMMARY));
 		addIndexedAttribute(document, IndexField.CONTENT, root.getMappedAttribute(TaskAttribute.DESCRIPTION));
 		addIndexedAttribute(document, IndexField.CONTENT, root.getAttribute("status_whiteboard")); //$NON-NLS-1$
@@ -570,8 +570,9 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	}
 
 	private void addIndexedAttributes(Document document, ITask task) {
-		addIndexedAttribute(document, IndexField.SUMMARY, task.getSummary());
 		addIndexedAttribute(document, IndexField.TASK_KEY, task.getTaskKey());
+		addIndexedAttribute(document, IndexField.REPOSITORY_URL, task.getRepositoryUrl());
+		addIndexedAttribute(document, IndexField.SUMMARY, task.getSummary());
 		addIndexedAttribute(document, IndexField.CONTENT, task.getSummary());
 		addIndexedAttribute(document, IndexField.CONTENT, ((AbstractTask) task).getNotes());
 		addIndexedDateAttributes(document, task);
@@ -815,5 +816,19 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	public String computeQueryFieldDateRange(IndexField field, Date lowerBoundInclusive, Date upperBoundInclusive) {
 		return field.fieldName()
 				+ ":[" + DateTools.dateToString(lowerBoundInclusive, Resolution.DAY) + " TO " + DateTools.dateToString(upperBoundInclusive, Resolution.DAY) + "]"; //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+	}
+
+	/**
+	 * escapes special characters in the given literal value so that they are not interpreted as special characters in a
+	 * query
+	 * 
+	 * @param value
+	 *            the value to escape
+	 * @return a representation of the value with characters escaped
+	 */
+	public String escapeFieldValue(String value) {
+		// see http://lucene.apache.org/java/2_9_1/queryparsersyntax.html#Escaping%20Special%20Characters
+		String escaped = value.replaceAll("([\\+\\-\\!\\(\\)\\{\\}\\[\\]^\"~\\*\\?:\\\\]|&&|\\|\\|)", "\\\\$1"); //$NON-NLS-1$ //$NON-NLS-2$
+		return escaped;
 	}
 }
