@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Logger;
 
 import org.apache.lucene.document.DateTools;
@@ -198,6 +201,8 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 
 	private int maxMatchSearchHits = 1500;
 
+	private final ReadWriteLock indexReaderLock = new ReentrantReadWriteLock(true);
+
 	private TaskListIndex(TaskList taskList, TaskDataManager dataManager) {
 		if (taskList == null) {
 			throw new IllegalArgumentException();
@@ -323,11 +328,14 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		if (patternString.equals(COMMAND_RESET_INDEX)) {
 			reindex();
 		}
-		IndexReader indexReader = getIndexReader();
-		if (indexReader != null) {
-			Set<String> hits;
+		Lock readLock = indexReaderLock.readLock();
+		readLock.lock();
+		try {
 
-			synchronized (indexReader) {
+			IndexReader indexReader = getIndexReader();
+			if (indexReader != null) {
+				Set<String> hits;
+
 				if (lastResults == null || (lastPatternString == null || !lastPatternString.equals(patternString))) {
 					this.lastPatternString = patternString;
 
@@ -359,15 +367,18 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 				} else {
 					hits = lastResults;
 				}
-			}
-			synchronized (this) {
-				if (this.indexReader == indexReader) {
-					this.lastPatternString = patternString;
-					this.lastResults = hits;
+				synchronized (this) {
+					if (this.indexReader == indexReader) {
+						this.lastPatternString = patternString;
+						this.lastResults = hits;
+					}
 				}
+				String taskIdentifier = task.getHandleIdentifier();
+				return hits != null && hits.contains(taskIdentifier);
 			}
-			String taskIdentifier = task.getHandleIdentifier();
-			return hits != null && hits.contains(taskIdentifier);
+
+		} finally {
+			readLock.unlock();
 		}
 		return false;
 	}
@@ -392,30 +403,37 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	}
 
 	public void find(String patternString, TaskCollector collector, int resultsLimit) {
-		IndexReader indexReader = getIndexReader();
-		if (indexReader != null) {
-			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-			try {
-				Query query = computeQuery(patternString);
-				TopDocs results = indexSearcher.search(query, resultsLimit);
-				for (ScoreDoc scoreDoc : results.scoreDocs) {
-					Document document = indexReader.document(scoreDoc.doc);
-					String taskIdentifier = document.get(IndexField.IDENTIFIER.fieldName());
-					AbstractTask task = taskList.getTask(taskIdentifier);
-					if (task != null) {
-						collector.collect(task);
+
+		Lock readLock = indexReaderLock.readLock();
+		readLock.lock();
+		try {
+			IndexReader indexReader = getIndexReader();
+			if (indexReader != null) {
+				IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+				try {
+					Query query = computeQuery(patternString);
+					TopDocs results = indexSearcher.search(query, resultsLimit);
+					for (ScoreDoc scoreDoc : results.scoreDocs) {
+						Document document = indexReader.document(scoreDoc.doc);
+						String taskIdentifier = document.get(IndexField.IDENTIFIER.fieldName());
+						AbstractTask task = taskList.getTask(taskIdentifier);
+						if (task != null) {
+							collector.collect(task);
+						}
+					}
+				} catch (IOException e) {
+					StatusHandler.fail(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
+							"Unexpected failure within task list index", e)); //$NON-NLS-1$
+				} finally {
+					try {
+						indexSearcher.close();
+					} catch (IOException e) {
+						e.printStackTrace();
 					}
 				}
-			} catch (IOException e) {
-				StatusHandler.fail(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
-						"Unexpected failure within task list index", e)); //$NON-NLS-1$
-			} finally {
-				try {
-					indexSearcher.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
+		} finally {
+			readLock.unlock();
 		}
 	}
 
@@ -468,22 +486,26 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 			// ignore
 		}
 
-		synchronized (this) {
-			if (indexReader != null) {
-				synchronized (indexReader) {
+		Lock writeLock = indexReaderLock.writeLock();
+		writeLock.lock();
+		try {
+			synchronized (this) {
+				if (indexReader != null) {
 					try {
 						indexReader.close();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					indexReader = null;
 				}
-				indexReader = null;
 			}
-		}
-		try {
-			directory.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+			try {
+				directory.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} finally {
+			writeLock.unlock();
 		}
 	}
 
@@ -802,13 +824,17 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 						}
 						monitor.worked(WORK_PER_SEGMENT);
 					}
-					synchronized (TaskListIndex.this) {
-						if (indexReader != null) {
-							synchronized (indexReader) {
+					Lock writeLock = indexReaderLock.writeLock();
+					writeLock.lock();
+					try {
+						synchronized (TaskListIndex.this) {
+							if (indexReader != null) {
 								indexReader.close();
+								indexReader = null;
 							}
-							indexReader = null;
 						}
+					} finally {
+						writeLock.unlock();
 					}
 				} catch (CoreException e) {
 					throw e;

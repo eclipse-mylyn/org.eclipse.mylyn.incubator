@@ -11,7 +11,7 @@
 
 package org.eclipse.mylyn.internal.tasks.index.tests;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -20,11 +20,19 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
+
+import junit.framework.Assert;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.mylyn.commons.core.DelegatingProgressMonitor;
@@ -317,5 +325,57 @@ public class TaskListIndexTest {
 
 		// should now match
 		assertTrue(index.matches(repositoryTask, content));
+	}
+
+	@Test
+	public void testMultithreadedAccessOnFind() throws CoreException, InterruptedException, ExecutionException {
+		setupIndex();
+
+		final ITask repositoryTask = context.createRepositoryTask();
+
+		index.waitUntilIdle();
+		index.setDefaultField(IndexField.CONTENT);
+
+		final int nThreads = 10;
+		final int[] concurrencyLevel = new int[1];
+		ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
+		try {
+			Collection<Callable<Object>> tasks = new HashSet<Callable<Object>>();
+			for (int x = 0; x < nThreads; ++x) {
+				tasks.add(new Callable<Object>() {
+
+					public Object call() throws Exception {
+						final int[] hitCount = new int[1];
+						index.find(repositoryTask.getSummary(), new TaskCollector() {
+
+							@Override
+							public void collect(ITask task) {
+								synchronized (concurrencyLevel) {
+									++concurrencyLevel[0];
+									if (concurrencyLevel[0] < nThreads) {
+										try {
+											concurrencyLevel.wait(5000L);
+										} catch (InterruptedException e) {
+											e.printStackTrace();
+										}
+									} else {
+										concurrencyLevel.notifyAll();
+									}
+								}
+								++hitCount[0];
+							}
+						}, 100);
+						return hitCount[0] == 1;
+					}
+				});
+			}
+			List<Future<Object>> futures = executorService.invokeAll(tasks);
+			for (Future<Object> future : futures) {
+				assertEquals(Boolean.TRUE, future.get());
+			}
+			Assert.assertEquals(nThreads, concurrencyLevel[0]);
+		} finally {
+			executorService.shutdownNow();
+		}
 	}
 }
