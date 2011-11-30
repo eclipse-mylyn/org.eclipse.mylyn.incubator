@@ -562,6 +562,9 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 			// this can happen when edits are discarded
 			return;
 		}
+		if (!taskIsIndexable(task, taskData)) {
+			return;
+		}
 		synchronized (reindexQueue) {
 			reindexQueue.put(task, taskData);
 		}
@@ -746,7 +749,11 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 
 							taskList.run(new ITaskListRunnable() {
 								public void execute(IProgressMonitor monitor) throws CoreException {
-									allTasks.addAll(taskList.getAllTasks());
+									for (ITask task : taskList.getAllTasks()) {
+										if (taskIsIndexable(task, null)) {
+											allTasks.add(task);
+										}
+									}
 								}
 							}, monitor.newChild(1));
 
@@ -754,6 +761,9 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 
 							reindexMonitor.beginTask(Messages.TaskListIndex_task_rebuildingIndex, allTasks.size());
 							for (ITask task : allTasks) {
+								if (!taskIsIndexable(task, null)) {
+									continue;
+								}
 								try {
 									TaskData taskData = dataManager.getTaskData(task);
 									add(writer, task, taskData);
@@ -863,6 +873,9 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		 * @throws IOException
 		 */
 		private void add(IndexWriter writer, ITask task, TaskData taskData) throws CorruptIndexException, IOException {
+			if (!taskIsIndexable(task, taskData)) {
+				return;
+			}
 
 			Document document = new Document();
 
@@ -899,8 +912,25 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 	}
 
 	/**
-	 * escapes special characters in the given literal value so that they are not interpreted as special characters in a
-	 * query
+	 * Indicates if the given task is indexable. The default implementation returns true, subclasses may override to
+	 * filter some tasks from the task list. This method may be called more than once per task, with some calls omitting
+	 * the task data. In this way implementations can avoid loading task data if the decision to filter tasks can be
+	 * based on the ITask alone. Implementations that must read the task data in order to determine eligibility for
+	 * indexing should return true for tasks where the provided task data is null.
+	 * 
+	 * @param task
+	 *            the task
+	 * @param taskData
+	 *            the task data, or null if there is no task data
+	 * @return true if the given task should be indexed, otherwise false.
+	 */
+	protected boolean taskIsIndexable(ITask task, TaskData taskData) {
+		return true;
+	}
+
+	/**
+	 * Escapes special characters in the given literal value so that they are not interpreted as special characters in a
+	 * query.
 	 * 
 	 * @param value
 	 *            the value to escape
