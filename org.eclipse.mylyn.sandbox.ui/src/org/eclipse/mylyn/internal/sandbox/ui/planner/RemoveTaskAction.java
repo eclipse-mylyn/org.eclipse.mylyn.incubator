@@ -14,7 +14,7 @@ package org.eclipse.mylyn.internal.sandbox.ui.planner;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.mylyn.internal.provisional.commons.ui.CommonImages;
+import org.eclipse.mylyn.commons.ui.CommonImages;
 import org.eclipse.mylyn.tasks.core.ITask;
 
 /**

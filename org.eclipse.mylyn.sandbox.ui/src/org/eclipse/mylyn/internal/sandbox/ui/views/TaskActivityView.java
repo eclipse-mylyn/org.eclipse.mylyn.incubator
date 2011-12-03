@@ -33,7 +33,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
-import org.eclipse.mylyn.internal.provisional.commons.ui.CommonThemes;
+import org.eclipse.mylyn.commons.ui.compatibility.CommonThemes;
 import org.eclipse.mylyn.internal.sandbox.ui.planner.ActivityReportAction;
 import org.eclipse.mylyn.internal.sandbox.ui.planner.TaskActivityLabelProvider;
 import org.eclipse.mylyn.internal.tasks.core.AbstractTask;

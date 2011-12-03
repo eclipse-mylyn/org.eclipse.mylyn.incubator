@@ -6,7 +6,6 @@
 			<accessrule kind="accessible" pattern="org/eclipse/mylyn/internal/tasks/core/**"/>
 			<accessrule kind="accessible" pattern="org/eclipse/mylyn/internal/tasks/index/core/**"/>
 			<accessrule kind="accessible" pattern="org/eclipse/mylyn/internal/tasks/ui/**"/>
-			<accessrule kind="accessible" pattern="org/eclipse/mylyn/internal/provisional/**"/>
 		</accessrules>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>

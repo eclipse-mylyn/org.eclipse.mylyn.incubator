@@ -34,8 +34,8 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.mylyn.internal.provisional.commons.ui.CommonUiUtil;
-import org.eclipse.mylyn.internal.provisional.commons.ui.WorkbenchUtil;
+import org.eclipse.mylyn.commons.ui.CommonUiUtil;
+import org.eclipse.mylyn.commons.workbench.browser.BrowserUtil;
 import org.eclipse.mylyn.tasks.core.IRepositoryQuery;
 import org.eclipse.mylyn.tasks.core.TaskRepository;
 import org.eclipse.mylyn.tasks.core.data.TaskData;
@@ -393,7 +393,7 @@ public class WebQueryWizardPage extends AbstractRepositoryQueryPage {
 					final String location = webPageFile.toURI().toURL().toString();
 					Display.getDefault().asyncExec(new Runnable() {
 						public void run() {
-							WorkbenchUtil.openUrl(location, IWorkbenchBrowserSupport.AS_EXTERNAL);
+							BrowserUtil.openUrl(location, IWorkbenchBrowserSupport.AS_EXTERNAL);
 						}
 					});
 				} catch (final Exception e) {

@@ -11,7 +11,7 @@
 package org.eclipse.mylyn.internal.tasks.index.ui;
 
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.mylyn.internal.provisional.commons.ui.SubstringPatternFilter;
+import org.eclipse.mylyn.commons.workbench.SubstringPatternFilter;
 import org.eclipse.mylyn.internal.tasks.index.core.TaskListIndex;
 import org.eclipse.mylyn.tasks.core.ITask;
 

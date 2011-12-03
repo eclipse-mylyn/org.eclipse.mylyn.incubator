@@ -20,8 +20,8 @@ import java.util.Locale;
 
 import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.window.Window;
-import org.eclipse.mylyn.internal.provisional.commons.ui.DatePicker;
-import org.eclipse.mylyn.internal.provisional.commons.ui.DateSelectionDialog;
+import org.eclipse.mylyn.commons.workbench.forms.DatePicker;
+import org.eclipse.mylyn.commons.workbench.forms.DateSelectionDialog;
 import org.eclipse.mylyn.internal.tasks.ui.ITasksUiPreferenceConstants;
 import org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin;
 import org.eclipse.swt.SWT;
