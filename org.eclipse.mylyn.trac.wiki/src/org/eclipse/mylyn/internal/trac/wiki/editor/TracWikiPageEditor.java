@@ -508,7 +508,7 @@ public class TracWikiPageEditor extends FormEditor {
 			setPartName(getEditorInput().getName());
 			setActivePage(BrowserFormPage.ID_EDITOR);
 		} catch (PartInitException e) {
-			StatusHandler.fail(new Status(IStatus.ERROR, TracWikiPlugin.ID_PLUGIN,
+			StatusHandler.log(new Status(IStatus.ERROR, TracWikiPlugin.ID_PLUGIN,
 					"Cannot create Trac Wiki page editor pages"));
 		}
 	}

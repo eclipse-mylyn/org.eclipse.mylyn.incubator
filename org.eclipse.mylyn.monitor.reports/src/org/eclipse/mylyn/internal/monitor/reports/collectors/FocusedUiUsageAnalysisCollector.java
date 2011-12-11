@@ -385,7 +385,7 @@ public class FocusedUiUsageAnalysisCollector extends AbstractMylynUsageCollector
 			}
 			writer.close();
 		} catch (IOException e) {
-			StatusHandler.fail(new Status(IStatus.ERROR, MonitorReportsPlugin.ID_PLUGIN, "Could not generate csv file",
+			StatusHandler.log(new Status(IStatus.ERROR, MonitorReportsPlugin.ID_PLUGIN, "Could not generate csv file",
 					e));
 		}
 	}

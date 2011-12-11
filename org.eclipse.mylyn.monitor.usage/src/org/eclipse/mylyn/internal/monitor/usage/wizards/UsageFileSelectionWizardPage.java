@@ -20,11 +20,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.wizard.WizardPage;
-import org.eclipse.mylyn.commons.core.StatusHandler;
 import org.eclipse.mylyn.internal.monitor.usage.MonitorFileRolloverJob;
 import org.eclipse.mylyn.internal.monitor.usage.StudyParameters;
 import org.eclipse.mylyn.internal.monitor.usage.UiUsageMonitorPlugin;
@@ -150,19 +147,13 @@ public class UsageFileSelectionWizardPage extends WizardPage {
 	}
 
 	public void createControl(Composite parent) {
-		try {
-			Composite container = new Composite(parent, SWT.NONE);
-			GridLayout layout = new GridLayout(3, false);
-			layout.verticalSpacing = 15;
-			container.setLayout(layout);
-			addZippedFileView(container);
-			setControl(container);
-			// setPageComplete(validate());
-		} catch (RuntimeException e) {
-			// FIXME what exception is caught here?
-			StatusHandler.fail(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN,
-					"Could not create import wizard page", e)); //$NON-NLS-1$
-		}
+		Composite container = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout(3, false);
+		layout.verticalSpacing = 15;
+		container.setLayout(layout);
+		addZippedFileView(container);
+		setControl(container);
+		// setPageComplete(validate());
 	}
 
 	public List<String> getZipFilesSelected() {

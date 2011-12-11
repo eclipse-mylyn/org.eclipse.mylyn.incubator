@@ -27,7 +27,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.wizard.WizardDialog;
-import org.eclipse.mylyn.commons.core.StatusHandler;
 import org.eclipse.mylyn.internal.monitor.usage.InteractionEventSummarySorter;
 import org.eclipse.mylyn.internal.monitor.usage.UiUsageMonitorPlugin;
 import org.eclipse.mylyn.internal.monitor.usage.common.UsageCountContentProvider;
@@ -57,6 +56,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.browser.WebBrowserPreference;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
+import org.eclipse.ui.statushandlers.StatusManager;
 
 /**
  * @author Meghan Allen
@@ -176,8 +176,8 @@ public class UsageSummaryReportEditorPart extends UsageEditorPart {
 					IWorkbenchBrowserSupport support = PlatformUI.getWorkbench().getBrowserSupport();
 					support.getExternalBrowser().openURL(new URL(studyParameters.getUsagePageUrl()));
 				} catch (Exception e) {
-					StatusHandler.fail(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN,
-							"Could not open url", e)); //$NON-NLS-1$
+					StatusManager.getManager()
+							.handle(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN, "Could not open url", e), StatusManager.SHOW | StatusManager.LOG); //$NON-NLS-1$
 				}
 			} else {
 				IWebBrowser browser = null;

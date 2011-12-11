@@ -23,7 +23,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.mylyn.commons.core.StatusHandler;
 import org.eclipse.mylyn.commons.ui.compatibility.CommonColors;
 import org.eclipse.mylyn.internal.monitor.usage.InteractionEventObfuscator;
 import org.eclipse.mylyn.internal.monitor.usage.MonitorPreferenceConstants;
@@ -55,6 +54,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.internal.browser.WebBrowserPreference;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
+import org.eclipse.ui.statushandlers.StatusManager;
 
 /**
  * @author Mik Kersten
@@ -129,8 +129,9 @@ public class UsageDataPreferencePage extends PreferencePage implements IWorkbenc
 					IWorkbenchBrowserSupport support = PlatformUI.getWorkbench().getBrowserSupport();
 					support.getExternalBrowser().openURL(new URL(moreInformationUrl));
 				} catch (Exception e) {
-					StatusHandler.fail(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN,
-							"Could not open url", e)); //$NON-NLS-1$
+					StatusManager.getManager()
+							.handle(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN,
+									"Failed to not open url", e), StatusManager.SHOW | StatusManager.LOG); //$NON-NLS-1$
 				}
 			} else {
 				IWebBrowser browser = null;

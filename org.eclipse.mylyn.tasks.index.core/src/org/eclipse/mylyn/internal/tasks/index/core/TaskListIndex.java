@@ -352,7 +352,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 							hits.add(document.get(IndexField.IDENTIFIER.fieldName()));
 						}
 					} catch (IOException e) {
-						StatusHandler.fail(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
+						StatusHandler.log(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
 								"Unexpected failure within task list index", e)); //$NON-NLS-1$
 					} finally {
 						try {
@@ -422,7 +422,7 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 						}
 					}
 				} catch (IOException e) {
-					StatusHandler.fail(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
+					StatusHandler.log(new Status(IStatus.ERROR, TasksIndexCore.BUNDLE_ID,
 							"Unexpected failure within task list index", e)); //$NON-NLS-1$
 				} finally {
 					try {
