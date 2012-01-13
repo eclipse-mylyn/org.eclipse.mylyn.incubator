@@ -557,7 +557,16 @@ public class TaskListIndex implements ITaskDataManagerListener, ITaskListChangeL
 		}
 	}
 
-	private void reindex(ITask task, TaskData taskData) {
+	/**
+	 * advanced usage: cause the given task to be reindexed using {@link MaintainIndexType#REINDEX reindex scheduling
+	 * rule}.
+	 * 
+	 * @param task
+	 *            the task
+	 * @param taskData
+	 *            the task data, or nul if it's not available
+	 */
+	protected void reindex(ITask task, TaskData taskData) {
 		if (task == null) {
 			// this can happen when edits are discarded
 			return;
