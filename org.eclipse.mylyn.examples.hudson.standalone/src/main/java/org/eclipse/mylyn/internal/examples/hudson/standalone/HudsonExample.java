@@ -11,22 +11,6 @@
 package org.eclipse.mylyn.internal.examples.hudson.standalone;
 
 import java.util.List;
-import java.util.UUID;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.mylyn.builds.core.IBuildPlan;
-import org.eclipse.mylyn.builds.core.spi.BuildServerBehaviour;
-import org.eclipse.mylyn.builds.core.spi.BuildServerConfiguration;
-import org.eclipse.mylyn.commons.net.WebLocation;
-import org.eclipse.mylyn.commons.repositories.RepositoryLocation;
-import org.eclipse.mylyn.internal.commons.net.CommonsNetPlugin;
-import org.eclipse.mylyn.internal.commons.repositories.InMemoryCredentialsStore;
-import org.eclipse.mylyn.internal.hudson.core.HudsonConnector;
-import org.eclipse.mylyn.internal.hudson.core.client.HudsonConfigurationCache;
-import org.eclipse.mylyn.internal.hudson.core.client.HudsonException;
-import org.eclipse.mylyn.internal.hudson.core.client.RestfulHudsonClient;
-import org.eclipse.mylyn.internal.hudson.model.HudsonModelJob;
-import org.eclipse.osgi.util.NLS;
 
 /**
  * @author Steffen Pingel
@@ -48,14 +32,10 @@ public class HudsonExample {
 
 	private static void framworkApiExample() throws CoreException {
 		RepositoryLocation location = new RepositoryLocation();
-		location.setProperty(RepositoryLocation.PROPERTY_ID, UUID.randomUUID().toString());
-		location.setCredentialsStore(new InMemoryCredentialsStore(null));
+		location.setUrl("http://ci.mylyn.org/");
+		//location.setCredentials(AuthenticationType.REPOSITORY, new UserCredentials("username", "password"));
 
-		location.setProperty(RepositoryLocation.PROPERTY_URL, "http://ci.mylyn.org/");
-//		AuthenticationCredentials credentials = new UsernamePasswordCredentials("username", "password");
-//		location.setCredentials(org.eclipse.mylyn.commons.repositories.auth.AuthenticationType.REPOSITORY, credentials);
-
-		HudsonConnector connector = new HudsonConnector();
+		BuildConnector connector = HudsonCore.createConnector(null);
 		BuildServerBehaviour behavior = connector.getBehaviour(location);
 
 		System.out.println(NLS.bind("= Listing all jobs on {0} =", location.getUrl()));
@@ -66,8 +46,9 @@ public class HudsonExample {
 	}
 
 	private static void hudsonApiExample() throws HudsonException {
-		WebLocation location = new WebLocation("http://ci.mylyn.org/");
-//		location.setCredentials(AuthenticationType.HTTP, "username", "password");
+		RepositoryLocation location = new RepositoryLocation();
+		location.setUrl("http://mylyn.org/jenkins-latest");
+		//location.setCredentials(AuthenticationType.REPOSITORY, new UserCredentials("username", "password"));
 
 		RestfulHudsonClient client = new RestfulHudsonClient(location, new HudsonConfigurationCache());
 
