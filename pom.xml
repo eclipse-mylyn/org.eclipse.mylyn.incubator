@@ -72,14 +72,9 @@
     <module>org.eclipse.mylyn.sandbox.search-feature</module>
     <module>org.eclipse.mylyn.sandbox.ui</module>
     <module>org.eclipse.mylyn.sandbox.ui-feature</module>
-    
-    <module>org.eclipse.mylyn.tasks.index.core</module>
-    <module>org.eclipse.mylyn.tasks.index.ui</module>
-    <module>org.eclipse.mylyn.tasks.index.tests</module>
-    <module>org.eclipse.mylyn.tasks.index-feature</module>
-<!--
+    <!--
     <module>org.eclipse.mylyn.tests.ui</module>
--->
+    -->
     <module>org.eclipse.mylyn.trac.wiki</module>
     <module>org.eclipse.mylyn.trac.wiki-feature</module>
     <module>org.eclipse.mylyn.web.tasks</module>
