@@ -13,7 +13,7 @@
       id="org.eclipse.mylyn.tests.performance_feature"
       label="%featureName"
       version="3.7.0.qualifier"
-      plugin="org.eclipse.mylyn">
+      plugin="org.eclipse.mylyn.sandbox.ui">
 
    <description url="http://eclipse.org/mylyn">
       %description
