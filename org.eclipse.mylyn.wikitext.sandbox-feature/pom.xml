@@ -5,7 +5,7 @@
   <parent>
     <artifactId>org.eclipse.mylyn.incubator-parent</artifactId>
     <groupId>org.eclipse.mylyn.incubator</groupId>
-    <version>3.7.0-SNAPSHOT</version>
+    <version>3.7.1-SNAPSHOT</version>
   </parent>
   <artifactId>org.eclipse.mylyn.wikitext.sandbox</artifactId>
   <version>0.1.0-SNAPSHOT</version>
