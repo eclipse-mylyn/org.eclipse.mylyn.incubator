@@ -21,9 +21,6 @@
    <feature url="features/org.eclipse.mylyn.experimental_sdk_feature_0.0.0.jar" id="org.eclipse.mylyn.experimental_sdk_feature" version="0.0.0">
       <category name="SDKIncubator"/>
    </feature>
-   <feature url="features/org.eclipse.mylyn.tasks.index_0.0.0.qualifier.jar" id="org.eclipse.mylyn.tasks.index" version="0.0.0">
-      <category name="Incubator"/>
-   </feature>
    <category-def name="Incubator" label="Mylyn Incubator">
       <description>
          Mylyn bridges that integrate with documents and programming languages. Mylyn connectors that integrate with task repositories.
