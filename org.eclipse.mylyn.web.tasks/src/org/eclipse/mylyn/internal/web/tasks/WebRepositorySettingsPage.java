@@ -73,8 +73,6 @@ public class WebRepositorySettingsPage extends AbstractRepositorySettingsPage im
 
 	private ComboViewer loginRequestMethod;
 
-	private FormToolkit toolkit;
-
 	private Map<String, String> oldProperties;
 
 	private final ArrayList<ControlDecoration> decorations = new ArrayList<ControlDecoration>();
@@ -88,10 +86,6 @@ public class WebRepositorySettingsPage extends AbstractRepositorySettingsPage im
 
 	@Override
 	public void dispose() {
-		if (toolkit != null) {
-			toolkit.dispose();
-			toolkit = null;
-		}
 		for (ControlDecoration decoration : decorations) {
 			decoration.dispose();
 		}
@@ -133,9 +127,6 @@ public class WebRepositorySettingsPage extends AbstractRepositorySettingsPage im
 	@SuppressWarnings("restriction")
 	@Override
 	protected void createAdditionalControls(Composite parent) {
-		toolkit = new FormToolkit(org.eclipse.mylyn.internal.tasks.ui.TasksUiPlugin.getDefault().getFormColors(
-				parent.getDisplay()));
-
 		addRepositoryTemplatesToServerUrlCombo();
 
 		Composite composite = new Composite(parent, SWT.NONE);
@@ -195,6 +186,7 @@ public class WebRepositorySettingsPage extends AbstractRepositorySettingsPage im
 	}
 
 	private void createAdvancedComposite(final Composite composite) {
+		FormToolkit toolkit = getToolkit();
 		ExpandableComposite expComposite = toolkit.createExpandableComposite(composite, ExpandableComposite.TITLE_BAR
 				| ExpandableComposite.COMPACT | ExpandableComposite.TWISTIE);
 		expComposite.clientVerticalSpacing = 0;
