@@ -19,7 +19,6 @@ import org.eclipse.mylyn.monitor.tests.InteractionEventExternalizationTest;
 import org.eclipse.mylyn.monitor.tests.InteractionLoggerTest;
 import org.eclipse.mylyn.monitor.tests.MonitorPackagingTest;
 import org.eclipse.mylyn.monitor.tests.MonitorTest;
-import org.eclipse.mylyn.monitor.tests.MultiWindowMonitorTest;
 import org.eclipse.mylyn.monitor.tests.StatisticsLoggingTest;
 import org.eclipse.mylyn.monitor.usage.tests.AllMonitorUsageTests;
 import org.eclipse.mylyn.tasks.tests.web.HtmlDecodeEntityTest;
@@ -59,7 +58,8 @@ public class AllSandboxTests {
 		suite.addTestSuite(MonitorTest.class);
 		suite.addTestSuite(InteractionEventExternalizationTest.class);
 		suite.addTestSuite(MonitorPackagingTest.class);
-		suite.addTestSuite(MultiWindowMonitorTest.class);
+		// disabled due to compile errors on Eclipse 4.2
+		//suite.addTestSuite(MultiWindowMonitorTest.class);
 
 		return suite;
 	}
