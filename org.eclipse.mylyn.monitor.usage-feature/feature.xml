@@ -30,8 +30,8 @@
 
    <requires>
       <import feature="org.eclipse.rcp" version="3.3.0" match="greaterOrEqual"/>
-      <import feature="org.eclipse.mylyn.commons" version="3.8.0" match="compatible"/>
-      <import feature="org.eclipse.mylyn.monitor" version="3.8.0" match="compatible"/>
+      <import feature="org.eclipse.mylyn.commons" version="3.9.0" match="compatible"/>
+      <import feature="org.eclipse.mylyn.monitor" version="3.9.0" match="compatible"/>
    </requires>
 
    <plugin
