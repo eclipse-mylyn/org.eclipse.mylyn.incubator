@@ -52,6 +52,7 @@ import org.osgi.framework.BundleContext;
 /**
  * @author Mik Kersten
  * @author Shawn Minto
+ * @author Frank Becker
  */
 public class UiUsageMonitorPlugin extends AbstractUIPlugin {
 
@@ -258,8 +259,9 @@ public class UiUsageMonitorPlugin extends AbstractUIPlugin {
 	}
 
 	public boolean isObfuscationEnabled() {
-		return UiUsageMonitorPlugin.getDefault().getPreferenceStore().getBoolean(
-				MonitorPreferenceConstants.PREF_MONITORING_OBFUSCATE)
+		return UiUsageMonitorPlugin.getDefault()
+				.getPreferenceStore()
+				.getBoolean(MonitorPreferenceConstants.PREF_MONITORING_OBFUSCATE)
 				|| (studyParameters != null && studyParameters.forceObfuscation());
 	}
 
@@ -286,10 +288,14 @@ public class UiUsageMonitorPlugin extends AbstractUIPlugin {
 		// ContextCore.getPluginPreferences().removePropertyChangeListener(DATA_DIR_MOVE_LISTENER);
 
 		MonitorUiPlugin.getDefault().removeWindowPerspectiveListener(perspectiveMonitor);
-		workbench.getActivitySupport().getActivityManager().removeActivityManagerListener(activityMonitor);
-		if (workbench.getDisplay() != null && !workbench.getDisplay().isDisposed()) {
-			workbench.getDisplay().removeFilter(SWT.Selection, menuMonitor);
-			workbench.removeWindowListener(windowMonitor);
+		if (workbench != null) {
+			if (workbench.getActivitySupport() != null) {
+				workbench.getActivitySupport().getActivityManager().removeActivityManagerListener(activityMonitor);
+			}
+			if (workbench.getDisplay() != null && !workbench.getDisplay().isDisposed()) {
+				workbench.getDisplay().removeFilter(SWT.Selection, menuMonitor);
+				workbench.removeWindowListener(windowMonitor);
+			}
 		}
 
 		// uninstallBrowserMonitor(workbench);
@@ -366,15 +372,18 @@ public class UiUsageMonitorPlugin extends AbstractUIPlugin {
 
 	public Date getLastTransmitDate() {
 		Date lastTransmit;
-		if (UiUsageMonitorPlugin.getDefault().getPreferenceStore().contains(
-				MonitorPreferenceConstants.PREF_PREVIOUS_TRANSMIT_DATE)) {
+		if (UiUsageMonitorPlugin.getDefault()
+				.getPreferenceStore()
+				.contains(MonitorPreferenceConstants.PREF_PREVIOUS_TRANSMIT_DATE)) {
 
-			lastTransmit = new Date(UiUsageMonitorPlugin.getDefault().getPreferenceStore().getLong(
-					MonitorPreferenceConstants.PREF_PREVIOUS_TRANSMIT_DATE));
+			lastTransmit = new Date(UiUsageMonitorPlugin.getDefault()
+					.getPreferenceStore()
+					.getLong(MonitorPreferenceConstants.PREF_PREVIOUS_TRANSMIT_DATE));
 		} else {
 			lastTransmit = new Date();
-			UiUsageMonitorPlugin.getDefault().getPreferenceStore().setValue(
-					MonitorPreferenceConstants.PREF_PREVIOUS_TRANSMIT_DATE, lastTransmit.getTime());
+			UiUsageMonitorPlugin.getDefault()
+					.getPreferenceStore()
+					.setValue(MonitorPreferenceConstants.PREF_PREVIOUS_TRANSMIT_DATE, lastTransmit.getTime());
 		}
 		return lastTransmit;
 	}
