@@ -22,4 +22,4 @@ Export-Package: org.eclipse.mylyn.resources.tests.performance;x-internal:=true,
  org.eclipse.mylyn.tasks.tests.performance;x-internal:=true,
  org.eclipse.mylyn.tests.performance;x-internal:=true,
  org.eclipse.mylyn.tests.performance.support;x-internal:=true
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
