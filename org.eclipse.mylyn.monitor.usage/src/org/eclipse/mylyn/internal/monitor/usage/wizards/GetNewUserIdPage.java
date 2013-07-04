@@ -390,9 +390,10 @@ public class GetNewUserIdPage extends WizardPage {
 								public void run(IProgressMonitor monitor) throws InvocationTargetException,
 										InterruptedException {
 									try {
-										uid[0] = UiUsageMonitorPlugin.getDefault().getUploadManager().getNewUid(
-												studyParameters, first, last, email, anon, jobFunction, companySize,
-												companyFunction, contactEmail, monitor);
+										uid[0] = UiUsageMonitorPlugin.getDefault()
+												.getUploadManager()
+												.getNewUid(studyParameters, first, last, email, anon, jobFunction,
+														companySize, companyFunction, contactEmail, monitor);
 									} catch (UsageDataException e) {
 										StatusHandler.log(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN,
 												e.getMessage(), e));
@@ -408,14 +409,16 @@ public class GetNewUserIdPage extends WizardPage {
 									e1.getMessage(), e1));
 						}
 						if (uid[0] != -1 && uid[0] != 0) {
-							UiUsageMonitorPlugin.getDefault().getPreferenceStore().setValue(
-									studyParameters.getUserIdPreferenceId(), uid[0]);
+							UiUsageMonitorPlugin.getDefault()
+									.getPreferenceStore()
+									.setValue(studyParameters.getUserIdPreferenceId(), uid[0]);
 							if (wizard.getUploadPage() != null) {
 								wizard.getUploadPage().updateUid();
 							}
 							hasValidated = true;
-							MessageDialog.openInformation(Display.getDefault().getActiveShell(), NLS.bind(
-									Messages.GetNewUserIdPage_X_User_Study_Id, studyParameters.getStudyName()),
+							MessageDialog.openInformation(
+									Display.getDefault().getActiveShell(),
+									NLS.bind(Messages.GetNewUserIdPage_X_User_Study_Id, studyParameters.getStudyName()),
 									NLS.bind(Messages.GetNewUserIdPage_Your_X_User_Study_Id_Y,
 											studyParameters.getStudyName(), wizard.getUid()));
 						} else {
@@ -452,8 +455,9 @@ public class GetNewUserIdPage extends WizardPage {
 								public void run(IProgressMonitor monitor) throws InvocationTargetException,
 										InterruptedException {
 									try {
-										uid[0] = UiUsageMonitorPlugin.getDefault().getUploadManager().getExistingUid(
-												studyParameters, first, last, email, anon, monitor);
+										uid[0] = UiUsageMonitorPlugin.getDefault()
+												.getUploadManager()
+												.getExistingUid(studyParameters, first, last, email, anon, monitor);
 									} catch (UsageDataException e) {
 										uid[0] = -1;
 										StatusHandler.log(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN,
@@ -470,8 +474,9 @@ public class GetNewUserIdPage extends WizardPage {
 						}
 						if (uid[0] != -1 && uid[0] != 0) {
 
-							UiUsageMonitorPlugin.getDefault().getPreferenceStore().setValue(
-									studyParameters.getUserIdPreferenceId(), uid[0]);
+							UiUsageMonitorPlugin.getDefault()
+									.getPreferenceStore()
+									.setValue(studyParameters.getUserIdPreferenceId(), uid[0]);
 							if (wizard.getUploadPage() != null) {
 								wizard.getUploadPage().updateUid();
 							}
@@ -534,8 +539,9 @@ public class GetNewUserIdPage extends WizardPage {
 							public void run(IProgressMonitor monitor) throws InvocationTargetException,
 									InterruptedException {
 								try {
-									uid[0] = UiUsageMonitorPlugin.getDefault().getUploadManager().getNewUid(
-											studyParameters, monitor);
+									uid[0] = UiUsageMonitorPlugin.getDefault()
+											.getUploadManager()
+											.getNewUid(studyParameters, monitor);
 								} catch (UsageDataException e) {
 									uid[0] = -1;
 									StatusHandler.log(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN,
@@ -549,16 +555,18 @@ public class GetNewUserIdPage extends WizardPage {
 						StatusHandler.log(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN, e1.getMessage(), e1));
 					}
 					if (uid[0] != -1 && uid[0] != 0) {
-						UiUsageMonitorPlugin.getDefault().getPreferenceStore().setValue(
-								studyParameters.getUserIdPreferenceId(), uid[0]);
+						UiUsageMonitorPlugin.getDefault()
+								.getPreferenceStore()
+								.setValue(studyParameters.getUserIdPreferenceId(), uid[0]);
 						if (wizard.getUploadPage() != null) {
 							wizard.getUploadPage().updateUid();
 						}
 						hasValidated = true;
-						MessageDialog.openInformation(Display.getDefault().getActiveShell(), NLS.bind(
-								Messages.GetNewUserIdPage_X_User_Study_Id, studyParameters.getStudyName()), NLS.bind(
-								Messages.GetNewUserIdPage_Your_X_User_Study_Id_Y_Record,
-								studyParameters.getStudyName(), wizard.getUid()));
+						MessageDialog.openInformation(
+								Display.getDefault().getActiveShell(),
+								NLS.bind(Messages.GetNewUserIdPage_X_User_Study_Id, studyParameters.getStudyName()),
+								NLS.bind(Messages.GetNewUserIdPage_Your_X_User_Study_Id_Y_Record,
+										studyParameters.getStudyName(), wizard.getUid()));
 					} else {
 						MessageDialog.openError(null, Messages.UsageSubmissionWizard_Error_Getting_User_Id,
 								Messages.UsageSubmissionWizard_Unable_To_Get_New_User_Id);

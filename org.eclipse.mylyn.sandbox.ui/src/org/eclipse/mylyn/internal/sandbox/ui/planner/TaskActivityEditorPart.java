@@ -65,7 +65,6 @@ import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.EditorPart;
 
 /**
- * 
  * Note: Some methods have been generalized to remove duplicate code but the design still isn't right (long parameter
  * lists, inflexible table creation). Needs refactoring. (Planned tasks section is currently disabled but should also
  * use the new common methods)
@@ -391,8 +390,9 @@ public class TaskActivityEditorPart extends EditorPart {
 	// }
 
 	private String getTotalTime() {
-		return TasksUiInternal.getFormattedDuration(editorInput.getTotalTimeSpentOnCompletedTasks()
-				+ editorInput.getTotalTimeSpentOnInProgressTasks(), false);
+		return TasksUiInternal.getFormattedDuration(
+				editorInput.getTotalTimeSpentOnCompletedTasks() + editorInput.getTotalTimeSpentOnInProgressTasks(),
+				false);
 	}
 
 	private TreeViewer createTableSection(Composite parent, FormToolkit toolkit, String title, String[] columnNames,

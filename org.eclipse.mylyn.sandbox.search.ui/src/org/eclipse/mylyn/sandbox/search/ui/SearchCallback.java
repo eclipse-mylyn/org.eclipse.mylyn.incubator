@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.mylyn.sandbox.search.ui;
 
-
 /**
  * A callback for use with {@link SearchProvider}
  * 

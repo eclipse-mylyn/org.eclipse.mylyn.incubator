@@ -73,13 +73,15 @@ public class FeedbackWizard extends Wizard implements INewWizard {
 		// MylynUsageMonitorPlugin.getDefault().getStudyParameters().getScriptsQuestionnaire();
 
 		int uid = feedbackPage.getUid();
-		UiUsageMonitorPlugin.getDefault().getUploadManager().uploadFile(
-				uploadScript,
-				"MYLYN" + uid,
-				f,
-				studyParameters.getUploadFileLabel() + "-" + studyParameters.getVersion() + "-" + "feedback" + "-"
-						+ uid + "-" + DateUtil.getIsoFormattedDateTime(Calendar.getInstance()) + ".txt", uid,
-				new NullProgressMonitor());
+		UiUsageMonitorPlugin.getDefault()
+				.getUploadManager()
+				.uploadFile(
+						uploadScript,
+						"MYLYN" + uid,
+						f,
+						studyParameters.getUploadFileLabel() + "-" + studyParameters.getVersion() + "-" + "feedback"
+								+ "-" + uid + "-" + DateUtil.getIsoFormattedDateTime(Calendar.getInstance()) + ".txt",
+						uid, new NullProgressMonitor());
 		if (f.exists()) {
 			f.delete();
 		}

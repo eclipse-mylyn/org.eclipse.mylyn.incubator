@@ -337,8 +337,9 @@ public class RepositorySpyView extends ViewPart {
 		};
 		clearConfigLastUpdateAction.setText("Clear Config Update");
 		clearConfigLastUpdateAction.setToolTipText("Forget last config update date");
-		clearConfigLastUpdateAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(
-				ISharedImages.IMG_TOOL_DELETE));
+		clearConfigLastUpdateAction.setImageDescriptor(PlatformUI.getWorkbench()
+				.getSharedImages()
+				.getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
 		doubleClickAction = new Action() {
 			@Override
 			public void run() {

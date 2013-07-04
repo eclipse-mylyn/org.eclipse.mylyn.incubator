@@ -122,8 +122,9 @@ public class UsageSubmissionWizard extends Wizard implements INewWizard {
 
 					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 						try {
-							newUid[0] = UiUsageMonitorPlugin.getDefault().getUploadManager().getNewUid(studyParameters,
-									monitor);
+							newUid[0] = UiUsageMonitorPlugin.getDefault()
+									.getUploadManager()
+									.getNewUid(studyParameters, monitor);
 						} catch (UsageDataException e) {
 							StatusHandler.log(new Status(IStatus.ERROR, UiUsageMonitorPlugin.ID_PLUGIN, e.getMessage(),
 									e));
@@ -138,8 +139,9 @@ public class UsageSubmissionWizard extends Wizard implements INewWizard {
 			}
 			uid = newUid[0];
 
-			UiUsageMonitorPlugin.getDefault().getPreferenceStore().setValue(studyParameters.getUserIdPreferenceId(),
-					uid);
+			UiUsageMonitorPlugin.getDefault()
+					.getPreferenceStore()
+					.setValue(studyParameters.getUserIdPreferenceId(), uid);
 		}
 
 		if (uid == 0 || uid == -1) {
@@ -227,8 +229,9 @@ public class UsageSubmissionWizard extends Wizard implements INewWizard {
 		MultiStatus uploadStatus = new MultiStatus(UiUsageMonitorPlugin.ID_PLUGIN, 0, "Error uploading usage data", //$NON-NLS-1$
 				null);
 		if (studyParameters.isBackgroundEnabled() && performUpload && backgroundFile != null) {
-			uploadStatus.add(UiUsageMonitorPlugin.getDefault().getUploadManager().uploadFile(servletUrl,
-					backgroundFile, uid, monitor));
+			uploadStatus.add(UiUsageMonitorPlugin.getDefault()
+					.getUploadManager()
+					.uploadFile(servletUrl, backgroundFile, uid, monitor));
 
 			if (backgroundFile.exists()) {
 				backgroundFile.delete();
@@ -236,8 +239,9 @@ public class UsageSubmissionWizard extends Wizard implements INewWizard {
 		}
 
 		if (studyParameters.isQuestionnaireEnabled() && performUpload && questionnaireFile != null) {
-			uploadStatus.add(UiUsageMonitorPlugin.getDefault().getUploadManager().uploadFile(servletUrl,
-					questionnaireFile, uid, monitor));
+			uploadStatus.add(UiUsageMonitorPlugin.getDefault()
+					.getUploadManager()
+					.uploadFile(servletUrl, questionnaireFile, uid, monitor));
 
 			if (questionnaireFile.exists()) {
 				questionnaireFile.delete();
@@ -248,8 +252,9 @@ public class UsageSubmissionWizard extends Wizard implements INewWizard {
 			return;
 		}
 
-		uploadStatus.add(UiUsageMonitorPlugin.getDefault().getUploadManager().uploadFile(servletUrl, zipFile, uid,
-				monitor));
+		uploadStatus.add(UiUsageMonitorPlugin.getDefault()
+				.getUploadManager()
+				.uploadFile(servletUrl, zipFile, uid, monitor));
 
 		if (zipFile.exists()) {
 			zipFile.delete();

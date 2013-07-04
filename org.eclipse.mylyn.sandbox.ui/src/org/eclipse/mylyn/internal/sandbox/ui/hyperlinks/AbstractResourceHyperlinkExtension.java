@@ -21,9 +21,7 @@ import org.eclipse.jface.text.hyperlink.IHyperlink;
 
 /**
  * An IResourceHyperlinkExtension implementation with various helper methods. Subclasses may choose to extend it instead
- * of IResourceHyperlinkExtension.
- * 
- * It matches text that is in the form of &lt;prefix&gt; &lt;qualified name&gt;.
+ * of IResourceHyperlinkExtension. It matches text that is in the form of &lt;prefix&gt; &lt;qualified name&gt;.
  * 
  * @author Jingwen Ou
  */
@@ -103,7 +101,6 @@ public abstract class AbstractResourceHyperlinkExtension implements IResourceHyp
 	 *            the region of the hyperlink
 	 * @param resourceName
 	 *            the found resource name
-	 * 
 	 * @return the correspondent IHyperlink instance for this resouce
 	 */
 	protected abstract IHyperlink createHyperlinkInstance(IRegion region, String resourceName);

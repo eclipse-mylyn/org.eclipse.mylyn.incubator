@@ -45,8 +45,9 @@ public class MylynUserStudyExamplePlugin extends AbstractUIPlugin {
 			workbench.getDisplay().asyncExec(new Runnable() {
 				public void run() {
 					MylynUserStudyExamplePlugin.getDefault().selectionMonitor = new SelectionMonitor();
-					MonitorUiPlugin.getDefault().getSelectionMonitors().add(
-							MylynUserStudyExamplePlugin.getDefault().selectionMonitor);
+					MonitorUiPlugin.getDefault()
+							.getSelectionMonitors()
+							.add(MylynUserStudyExamplePlugin.getDefault().selectionMonitor);
 
 					UiUsageMonitorPlugin.getDefault().addMonitoredPreferences(
 							WorkbenchPlugin.getDefault().getPreferenceStore());

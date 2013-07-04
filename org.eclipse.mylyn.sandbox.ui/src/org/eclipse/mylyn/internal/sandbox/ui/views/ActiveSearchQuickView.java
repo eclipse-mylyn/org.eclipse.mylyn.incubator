@@ -518,8 +518,10 @@ public class ActiveSearchQuickView {
 			centerPoint = Geometry.centerPoint(monitorBounds);
 		}
 
-		return new Point(centerPoint.x - (initialSize.x / 2), Math.max(monitorBounds.y, Math.min(centerPoint.y
-				- (initialSize.y * 2 / 3), monitorBounds.y + monitorBounds.height - initialSize.y)));
+		return new Point(centerPoint.x - (initialSize.x / 2), Math.max(
+				monitorBounds.y,
+				Math.min(centerPoint.y - (initialSize.y * 2 / 3), monitorBounds.y + monitorBounds.height
+						- initialSize.y)));
 	}
 
 	private IDialogSettings getDialogSettings() {

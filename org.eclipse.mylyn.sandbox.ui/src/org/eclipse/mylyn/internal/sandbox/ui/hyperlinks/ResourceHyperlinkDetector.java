@@ -23,10 +23,9 @@ import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector;
 import org.eclipse.jface.text.hyperlink.IHyperlink;
 
 /**
- * Resource hyperlink detector, detecting format like < prefix > < qualified name >, examples are:
- * 
- * See java class foo.bar.Baz, it could be related; See cpp class Foo, it could be related; See file foo.txt, I left
- * some notes there; See task 123, I put a comment there
+ * Resource hyperlink detector, detecting format like < prefix > < qualified name >, examples are: See java class
+ * foo.bar.Baz, it could be related; See cpp class Foo, it could be related; See file foo.txt, I left some notes there;
+ * See task 123, I put a comment there
  * 
  * @author Jingwen Ou
  */

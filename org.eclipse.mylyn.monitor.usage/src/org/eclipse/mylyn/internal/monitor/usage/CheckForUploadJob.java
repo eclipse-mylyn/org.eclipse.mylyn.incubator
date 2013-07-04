@@ -63,19 +63,23 @@ public class CheckForUploadJob extends UIJob {
 			if (result == 0) {
 				// time must be stored right away into preferences, to prevent
 				// other threads
-				UiUsageMonitorPlugin.getDefault().getPreferenceStore().setValue(
-						MonitorPreferenceConstants.PREF_PREVIOUS_TRANSMIT_DATE, currentTime.getTime());
+				UiUsageMonitorPlugin.getDefault()
+						.getPreferenceStore()
+						.setValue(MonitorPreferenceConstants.PREF_PREVIOUS_TRANSMIT_DATE, currentTime.getTime());
 
-				if (!UiUsageMonitorPlugin.getDefault().getPreferenceStore().contains(
-						MonitorPreferenceConstants.PREF_MONITORING_MYLYN_ECLIPSE_ORG_CONSENT_VIEWED)
-						|| !UiUsageMonitorPlugin.getDefault().getPreferenceStore().getBoolean(
-								MonitorPreferenceConstants.PREF_MONITORING_MYLYN_ECLIPSE_ORG_CONSENT_VIEWED)) {
+				if (!UiUsageMonitorPlugin.getDefault()
+						.getPreferenceStore()
+						.contains(MonitorPreferenceConstants.PREF_MONITORING_MYLYN_ECLIPSE_ORG_CONSENT_VIEWED)
+						|| !UiUsageMonitorPlugin.getDefault()
+								.getPreferenceStore()
+								.getBoolean(MonitorPreferenceConstants.PREF_MONITORING_MYLYN_ECLIPSE_ORG_CONSENT_VIEWED)) {
 					MessageDialog consentMessage = new MessageDialog(Display.getDefault().getActiveShell(),
 							Messages.UiUsageMonitorPlugin_Consent, null, Messages.UiUsageMonitorPlugin_All_Data_Public,
 							MessageDialog.INFORMATION, new String[] { IDialogConstants.OK_LABEL }, 0);
 					consentMessage.open();
-					UiUsageMonitorPlugin.getDefault().getPreferenceStore().setValue(
-							MonitorPreferenceConstants.PREF_MONITORING_MYLYN_ECLIPSE_ORG_CONSENT_VIEWED, true);
+					UiUsageMonitorPlugin.getDefault()
+							.getPreferenceStore()
+							.setValue(MonitorPreferenceConstants.PREF_MONITORING_MYLYN_ECLIPSE_ORG_CONSENT_VIEWED, true);
 				}
 
 				UsageSubmissionWizard wizard = new UsageSubmissionWizard();
@@ -99,8 +103,9 @@ public class CheckForUploadJob extends UIJob {
 				if (result == 1) {
 					UiUsageMonitorPlugin.getDefault().userCancelSubmitFeedback(currentTime, true);
 				} else {
-					UiUsageMonitorPlugin.getDefault().getPreferenceStore().setValue(
-							MonitorPreferenceConstants.PREF_MONITORING_ENABLE_SUBMISSION, false);
+					UiUsageMonitorPlugin.getDefault()
+							.getPreferenceStore()
+							.setValue(MonitorPreferenceConstants.PREF_MONITORING_ENABLE_SUBMISSION, false);
 				}
 			}
 			message.close();
@@ -121,8 +126,9 @@ public class CheckForUploadJob extends UIJob {
 		Date lastTransmit = UiUsageMonitorPlugin.getDefault().getLastTransmitDate();
 
 		if (currentTime.getTime() > lastTransmit.getTime() + studyParameters.getTransmitPromptPeriod()
-				&& UiUsageMonitorPlugin.getDefault().getPreferenceStore().getBoolean(
-						MonitorPreferenceConstants.PREF_MONITORING_ENABLE_SUBMISSION)) {
+				&& UiUsageMonitorPlugin.getDefault()
+						.getPreferenceStore()
+						.getBoolean(MonitorPreferenceConstants.PREF_MONITORING_ENABLE_SUBMISSION)) {
 			return true;
 
 		}

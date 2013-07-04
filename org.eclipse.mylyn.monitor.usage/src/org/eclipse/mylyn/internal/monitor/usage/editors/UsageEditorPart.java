@@ -121,7 +121,8 @@ public class UsageEditorPart extends EditorPart {
 		layout.numColumns = 2;
 		container.setLayout(layout);
 
-		Button exportHtml = toolkit.createButton(container, Messages.UsageEditorPart_Export_As_Html, SWT.PUSH | SWT.CENTER);
+		Button exportHtml = toolkit.createButton(container, Messages.UsageEditorPart_Export_As_Html, SWT.PUSH
+				| SWT.CENTER);
 		exportHtml.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {

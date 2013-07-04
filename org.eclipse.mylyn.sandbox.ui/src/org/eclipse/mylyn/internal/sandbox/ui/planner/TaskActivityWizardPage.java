@@ -257,7 +257,6 @@ public class TaskActivityWizardPage extends WizardPage {
 	}
 
 	/**
-	 * 
 	 * Creates the buttons for selecting all or none of the categories.
 	 * 
 	 * @param parent

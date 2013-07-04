@@ -60,7 +60,7 @@ public class WebContentProposalProvider implements IContentProposalProvider {
 		}
 		addProposal(proposals, "${" + WebRepositoryConnector.PARAM_SERVER_URL + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 		addProposal(proposals, "${" + WebRepositoryConnector.PARAM_USER_ID + "}"); //$NON-NLS-1$ //$NON-NLS-2$
-		addProposal(proposals, "${" + WebRepositoryConnector.PARAM_PASSWORD + "}");  //$NON-NLS-1$//$NON-NLS-2$
+		addProposal(proposals, "${" + WebRepositoryConnector.PARAM_PASSWORD + "}"); //$NON-NLS-1$//$NON-NLS-2$
 		addProposal(proposals, "${" + WebRepositoryConnector.PARAM_LOGIN_TOKEN + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 		for (String param : parametersEditor.getParameters().keySet()) {
 			addProposal(proposals, "${" + param.substring(WebRepositoryConnector.PARAM_PREFIX.length()) + "}"); //$NON-NLS-1$ //$NON-NLS-2$

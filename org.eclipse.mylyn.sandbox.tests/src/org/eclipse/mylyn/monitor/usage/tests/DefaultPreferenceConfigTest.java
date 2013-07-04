@@ -23,8 +23,9 @@ public class DefaultPreferenceConfigTest extends TestCase {
 
 	public void testMonitorPreferences() {
 		assertNotNull(UiUsageMonitorPlugin.getDefault());
-		assertTrue(UiUsageMonitorPlugin.getDefault().getPreferenceStore().getBoolean(
-				MonitorPreferenceConstants.PREF_MONITORING_OBFUSCATE));
+		assertTrue(UiUsageMonitorPlugin.getDefault()
+				.getPreferenceStore()
+				.getBoolean(MonitorPreferenceConstants.PREF_MONITORING_OBFUSCATE));
 	}
 
 }

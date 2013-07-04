@@ -156,8 +156,10 @@ public class JavaResourceHyperlink implements IHyperlink {
 			String editorId = presentation.getEditorId(editorInput, source);
 			if (editorId != null) {
 				try {
-					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().openEditor(editorInput,
-							editorId);
+					PlatformUI.getWorkbench()
+							.getActiveWorkbenchWindow()
+							.getActivePage()
+							.openEditor(editorInput, editorId);
 
 				} catch (CoreException e) {
 					MessageDialog.openInformation(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),

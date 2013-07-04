@@ -14,7 +14,6 @@ package org.eclipse.mylyn.tasks.tests.web;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-
 /**
  * @author Mik Kersten
  */

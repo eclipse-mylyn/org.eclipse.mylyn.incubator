@@ -296,7 +296,8 @@ public class WebQueryWizardPage extends AbstractRepositoryQueryPage {
 				case 1:
 					return task.getSummary();
 				case 2:
-					return task.getCompletionDate() != null ? Messages.WebQueryWizardPage_complete
+					return task.getCompletionDate() != null
+							? Messages.WebQueryWizardPage_complete
 							: Messages.WebQueryWizardPage_incomplete;
 				case 3:
 					return task.getTaskKind();
@@ -329,10 +330,10 @@ public class WebQueryWizardPage extends AbstractRepositoryQueryPage {
 		LinkedHashMap<String, String> vars = new LinkedHashMap<String, String>();
 		Map<String, String> params = new LinkedHashMap<String, String>();
 		if (getTaskRepository() != null) {
-			queryUrlText.setText(addVars(vars, getTaskRepository().getProperty(
-					WebRepositoryConnector.PROPERTY_QUERY_URL)));
-			queryPatternText.setText(addVars(vars, getTaskRepository().getProperty(
-					WebRepositoryConnector.PROPERTY_QUERY_REGEXP)));
+			queryUrlText.setText(addVars(vars,
+					getTaskRepository().getProperty(WebRepositoryConnector.PROPERTY_QUERY_URL)));
+			queryPatternText.setText(addVars(vars,
+					getTaskRepository().getProperty(WebRepositoryConnector.PROPERTY_QUERY_REGEXP)));
 
 			oldProperties = getTaskRepository().getProperties();
 			params.putAll(oldProperties);
@@ -399,9 +400,10 @@ public class WebQueryWizardPage extends AbstractRepositoryQueryPage {
 				} catch (final Exception e) {
 					Display.getDefault().asyncExec(new Runnable() {
 						public void run() {
-							CommonUiUtil.setMessage(WebQueryWizardPage.this, new Status(IStatus.ERROR,
-									TasksWebPlugin.ID_PLUGIN, NLS.bind("Failed to open ''{0}'': {1}", evaluatedUrl,
-											e.getMessage()), e));
+							CommonUiUtil.setMessage(
+									WebQueryWizardPage.this,
+									new Status(IStatus.ERROR, TasksWebPlugin.ID_PLUGIN, NLS.bind(
+											"Failed to open ''{0}'': {1}", evaluatedUrl, e.getMessage()), e));
 						}
 					});
 				}
@@ -458,8 +460,9 @@ public class WebQueryWizardPage extends AbstractRepositoryQueryPage {
 			String currentRegexp = regexp;
 			String queryPattern = WebRepositoryConnector.evaluateParams(currentRegexp, params, getTaskRepository());
 			String evaluatedUrl = WebRepositoryConnector.evaluateParams(url, params, getTaskRepository());
-			String taskPrefix = WebRepositoryConnector.evaluateParams(getTaskRepository().getProperty(
-					WebRepositoryConnector.PROPERTY_TASK_URL), params, getTaskRepository());
+			String taskPrefix = WebRepositoryConnector.evaluateParams(
+					getTaskRepository().getProperty(WebRepositoryConnector.PROPERTY_TASK_URL), params,
+					getTaskRepository());
 			active = true;
 			do {
 				final MultiStatus queryStatus = new MultiStatus(TasksWebPlugin.ID_PLUGIN, IStatus.OK,
@@ -516,8 +519,8 @@ public class WebQueryWizardPage extends AbstractRepositoryQueryPage {
 		query.setSummary(getQueryTitle());
 		query.setAttribute(WebRepositoryConnector.KEY_QUERY_TEMPLATE, queryUrlText.getText());
 		query.setAttribute(WebRepositoryConnector.KEY_QUERY_PATTERN, queryPatternText.getText());
-		query.setAttribute(WebRepositoryConnector.KEY_TASK_PREFIX, getTaskRepository().getProperty(
-				WebRepositoryConnector.PROPERTY_TASK_URL));
+		query.setAttribute(WebRepositoryConnector.KEY_TASK_PREFIX,
+				getTaskRepository().getProperty(WebRepositoryConnector.PROPERTY_TASK_URL));
 		Map<String, String> params = parametersEditor.getParameters();
 		query.setUrl(WebRepositoryConnector.evaluateParams(queryUrlText.getText(), params, getTaskRepository()));
 		for (Map.Entry<String, String> entry : params.entrySet()) {

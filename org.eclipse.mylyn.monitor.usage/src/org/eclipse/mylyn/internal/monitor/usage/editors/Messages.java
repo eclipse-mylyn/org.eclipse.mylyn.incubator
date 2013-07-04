@@ -35,6 +35,7 @@ public class Messages extends NLS {
 	public static String UsageStatsEditorInput_Usage_Summary;
 
 	public static String UsageStatsEditorInput_X_Usage_Statistics;
+
 	public static String UsageSummaryReportEditorPart_Actions;
 
 	public static String UsageSummaryReportEditorPart_Count;
@@ -54,6 +55,7 @@ public class Messages extends NLS {
 	public static String UsageSummaryReportEditorPart_View_Community_Statistics;
 
 	public static String UsageSummaryReportEditorPart_View_File;
+
 	public static String UserStudyEditorPart_Id;
 
 	public static String UserStudyEditorPart_Kind;

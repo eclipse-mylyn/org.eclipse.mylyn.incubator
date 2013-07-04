@@ -131,14 +131,17 @@ public class Messages extends NLS {
 	public static String GetNewUserIdPage_Your_Data_Not_Traceable;
 
 	public static String GetNewUserIdPage_Your_X_User_Study_Id_Y;
+
 	public static String GetNewUserIdPage_Your_X_User_Study_Id_Y_Record;
 
 	public static String GetNewUserIdPage_Your_X_User_Study_Id_Y_Retrieve_By_Repeating;
 
 	public static String NewUsageSummaryEditorWizard_New_Usage_Summary_Report;
+
 	public static String UsageFileSelectionWizardPage_Please_Selected_Archived_Usage_Files;
 
 	public static String UsageFileSelectionWizardPage_Select_Archived_File_To_Upload;
+
 	public static String UsageSubmissionWizard_Error_Getting_User_Id;
 
 	public static String UsageSubmissionWizard_Error_Uploading_Usage_Data;
@@ -156,6 +159,7 @@ public class Messages extends NLS {
 	public static String UsageSubmissionWizard_X_Feedback;
 
 	public static String UsageSubmissionWizard_Your_Usage_Statistics_Have_Been_Uploaded;
+
 	public static String UsageSummaryEditorWizardPage_Show_Usage_Summaries_For;
 
 	public static String UsageSummaryEditorWizardPage_Summarizes_Usage_And_Uploads_To_X;
@@ -167,6 +171,7 @@ public class Messages extends NLS {
 	public static String UsageSummaryEditorWizardPage_Use_Of_Perspectives;
 
 	public static String UsageSummaryEditorWizardPage_Use_Of_Views;
+
 	public static String UsageUploadWizardPage_Upload_Url;
 
 	public static String UsageUploadWizardPage_Usage_Data_Submission;
