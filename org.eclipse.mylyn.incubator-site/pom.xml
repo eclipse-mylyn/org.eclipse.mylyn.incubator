@@ -43,6 +43,14 @@ http://www.eclipse.org/legal/epl-v10.html
     <plugins>
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-packaging-plugin</artifactId>
+        <version>${tycho-version}</version>
+        <configuration>
+          <timestampProvider>default</timestampProvider>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
         <artifactId>target-platform-configuration</artifactId>
         <version>${tycho-version}</version>		
         <configuration>
@@ -111,7 +119,7 @@ http://www.eclipse.org/legal/epl-v10.html
                   <property name="skipPromote" value="${promote.skip}"/>
                   
                   <property name="version" value="${unqualifiedVersion}"/>
-                  <property name="qualifier" value="${buildQualifier}"/>
+                  <property name="qualifier" value="${promote.prefix}${buildQualifier}"/>
                 </ant>
                 <echo file="${project.build.directory}/version.properties">
                   <![CDATA[
