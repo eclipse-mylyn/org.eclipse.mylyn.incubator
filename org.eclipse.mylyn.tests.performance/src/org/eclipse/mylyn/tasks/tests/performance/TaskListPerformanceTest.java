@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2009 Tasktop Technologies and others.
+ * Copyright (c) 2004, 2013 Tasktop Technologies and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,21 +39,6 @@ public class TaskListPerformanceTest extends PerformanceTestCase {
 		super.tearDown();
 
 		taskList.reset();
-	}
-
-	public void testReadTasksWith4000Tasks() throws Exception {
-		final File file = TaskTestUtil.getLocalFile(TASK_LIST_4000);
-		final TaskListExternalizer taskListWriter = TasksUiPlugin.getDefault().createTaskListExternalizer();
-
-		for (int i = 0; i < 10; i++) {
-			startMeasuring();
-			taskListWriter.readTaskList(new TransferList(), file);
-			stopMeasuring();
-			taskList.reset();
-		}
-
-		commitMeasurements();
-		assertPerformance();
 	}
 
 	public void testReadTaskListWith4000Tasks() throws Exception {
