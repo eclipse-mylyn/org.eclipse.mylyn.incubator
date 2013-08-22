@@ -18,41 +18,47 @@ import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.FindReplaceDocumentAdapter;
-import org.eclipse.jface.text.IRegion;
-import org.eclipse.jface.text.TextViewer;
 import org.eclipse.mylyn.commons.ui.CommonImages;
-import org.eclipse.mylyn.commons.workbench.editors.CommonTextSupport;
 import org.eclipse.mylyn.commons.workbench.forms.CommonFormUtil;
 import org.eclipse.mylyn.internal.bugzilla.ui.editor.BugzillaTaskEditorPage;
-import org.eclipse.mylyn.tasks.ui.editors.AbstractTaskEditorPage;
+import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorCommentPart;
+import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorCommentPart.CommentGroupViewer;
+import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorCommentPart.CommentViewer;
+import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorDescriptionPart;
+import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorPlanningPart;
+import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorSummaryPart;
+import org.eclipse.mylyn.tasks.core.data.TaskAttribute;
 import org.eclipse.mylyn.tasks.ui.editors.AbstractTaskEditorPart;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditor;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditorPartDescriptor;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.layout.RowData;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.forms.IManagedForm;
-import org.eclipse.ui.forms.editor.IFormPage;
+import org.eclipse.ui.forms.IFormPart;
+import org.eclipse.ui.forms.events.HyperlinkAdapter;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.eclipse.ui.forms.widgets.ScrolledForm;
 
 /**
- * A bugzilla task editor page that has wiki facilities.
+ * A bugzilla task editor page that has find functionality
  * 
  * @author Jingwen Ou
+ * @author Lily Guo
  */
 public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 
@@ -60,7 +66,9 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 
 	private static final Color HIGHLIGHTER_YELLOW = new Color(Display.getDefault(), 255, 238, 99);
 
-	private static final StyleRange HIGHLIGHT_STYLE_RANGE = new StyleRange(0, 0, null, HIGHLIGHTER_YELLOW);
+	private static final Color ERROR_NO_RESULT = new Color(Display.getDefault(), 255, 150, 150);
+
+	private final List<StyledText> textToSearchAndHighlight = new ArrayList<StyledText>();
 
 	public ExtensibleBugzillaTaskEditorPage(TaskEditor editor) {
 		super(editor);
@@ -72,28 +80,91 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 				@Override
 				protected Control createControl(Composite parent) {
 					FormToolkit toolkit = getTaskEditor().getHeaderForm().getToolkit();
-					Composite findComposite = toolkit.createComposite(parent);
-					findComposite.setLayout(new RowLayout());
+					final Composite findComposite = toolkit.createComposite(parent);
+
+					GridLayout findLayout = new GridLayout();
+					findLayout.marginHeight = 4;
+					findComposite.setLayout(findLayout);
 					findComposite.setBackground(null);
 
 					final Text findText = toolkit.createText(findComposite, "", SWT.FLAT);
-					findText.setLayoutData(new RowData(100, SWT.DEFAULT));
+					findText.setLayoutData(new GridData(100, SWT.DEFAULT));
 					findText.setData(FormToolkit.KEY_DRAW_BORDER, FormToolkit.TEXT_BORDER);
 					findText.setFocus();
 					toolkit.adapt(findText, false, false);
+
+					findText.addModifyListener(new ModifyListener() {
+						@Override
+						public void modifyText(ModifyEvent e) {
+							if (findText.getText().equals("")) {
+								removePreviousHighlight();
+								findText.setBackground(null);
+							}
+						}
+					});
+
 					findText.addSelectionListener(new SelectionAdapter() {
+
 						@Override
 						public void widgetDefaultSelected(SelectionEvent event) {
 							try {
 								setReflow(false);
-								findAndHighlight(ExtensibleBugzillaTaskEditorPage.this, findText.getText());
-								// always toggle attachment part close after every search, since all ExpandableComposites are open
-								AbstractTaskEditorPart attachmentsPart = getPart(AbstractTaskEditorPage.ID_PART_ATTACHMENTS);
-								CommonFormUtil.setExpanded((ExpandableComposite) attachmentsPart.getControl(), false);
+								findText.setBackground(null);
+								if (findText.getText().equals("")) {
+									return;
+								}
+								String searchText = findText.getText().toLowerCase();
+								IFormPart[] parts = getManagedForm().getParts();
+
+								removePreviousHighlight();
+
+								for (IFormPart part : parts) {
+									if (part instanceof TaskEditorSummaryPart) {
+										if (getModel().getTaskData()
+												.getRoot()
+												.getMappedAttribute(TaskAttribute.SUMMARY) != null) {
+											searchPart(textToSearchAndHighlight, getModel().getTaskData()
+													.getRoot()
+													.getMappedAttribute(TaskAttribute.SUMMARY)
+													.getValue(), searchText,
+													((TaskEditorSummaryPart) part).getControl());
+										}
+									} else if (part instanceof TaskEditorPlanningPart) {
+										if (((TaskEditorPlanningPart) part).getPlanningPart().getTask() != null) {
+											searchPart(textToSearchAndHighlight,
+													((TaskEditorPlanningPart) part).getPlanningPart()
+															.getTask()
+															.getNotes(), searchText,
+													((TaskEditorPlanningPart) part).getControl());
+										}
+									} else if (part instanceof TaskEditorDescriptionPart) {
+										if (getModel().getTaskData()
+												.getRoot()
+												.getMappedAttribute(TaskAttribute.DESCRIPTION) != null) {
+											searchPart(textToSearchAndHighlight, getModel().getTaskData()
+													.getRoot()
+													.getMappedAttribute(TaskAttribute.DESCRIPTION)
+													.getValue(), searchText,
+													((TaskEditorDescriptionPart) part).getControl());
+										}
+									} else if (part instanceof TaskEditorCommentPart) {
+										searchCommentPart(textToSearchAndHighlight, searchText,
+												(TaskEditorCommentPart) part);
+									}
+								}
+
+								if (!textToSearchAndHighlight.isEmpty()) {
+									for (StyledText styledText : textToSearchAndHighlight) {
+										highlightStyledText(styledText, searchText, 0);
+									}
+								} else {
+									findText.setBackground(ERROR_NO_RESULT);
+								}
 							} finally {
 								setReflow(true);
 							}
 							reflow();
+							findText.setFocus();
 						}
 					});
 					toolkit.paintBordersFor(findComposite);
@@ -108,15 +179,16 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 			toggleFindAction = new Action("", SWT.TOGGLE) {
 				@Override
 				public void run() {
+					if (!this.isChecked()) {
+						removePreviousHighlight();
+					}
 					getTaskEditor().updateHeaderToolBar();
 				}
 
 			};
 			toggleFindAction.setImageDescriptor(CommonImages.FIND);
 			toggleFindAction.setToolTipText("Find");
-			//getManagedForm().getForm().setData(TaskEditorFindHandler.KEY_FIND_ACTION, toggleFindAction);
 		}
-
 		toolBarManager.appendToGroup(IWorkbenchActionConstants.MB_ADDITIONS, toggleFindAction);
 	}
 
@@ -169,83 +241,188 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 		addFindAction(toolBarManager);
 	}
 
-	private static void findTextViewerControl(Composite composite, List<TextViewer> found) {
-		if (!composite.isDisposed()) {
-			for (Control child : composite.getChildren()) {
-				TextViewer viewer = CommonTextSupport.getTextViewer(child);
-				if (viewer != null && viewer.getDocument().get().length() > 0) {
-					found.add(viewer);
-				}
+	private void searchCommentPart(final List<StyledText> listStyledText, final String text,
+			final TaskEditorCommentPart part) {
+		List<TaskAttribute> commentAttributes = getModel().getTaskData()
+				.getAttributeMapper()
+				.getAttributesByType(getModel().getTaskData(), TaskAttribute.TYPE_COMMENT);
 
-				// have to do this since TaskEditorCommentPart.expendComment(..) will dispose the TextViewer when the ExpandableComposite is close
-				if (child instanceof ExpandableComposite) {
-					CommonFormUtil.setExpanded((ExpandableComposite) child, true);
-				}
+		if (!hasAnyResultInComments(commentAttributes, text)) {
+			return;
+		}
 
-				if (child instanceof Composite) {
-					findTextViewerControl((Composite) child, found);
+		if (!part.isSectionExpanded()) {
+			try {
+				part.setReflow(true);
+				part.expandAllComments(false);
+			} finally {
+				part.setReflow(false);
+			}
+		}
+		List<CommentGroupViewer> commentGroupViewers = part.getCommentGroupViewers();
+
+		int commentIndex = commentAttributes.size() - 1;
+		boolean hasResultInGroup = false;
+		boolean expanded = false;
+		for (int i = commentGroupViewers.size() - 1; i >= 0; i--) {
+			final CommentGroupViewer group = commentGroupViewers.get(i);
+			if (!expanded) {
+				int index = commentIndex;
+				for (int j = group.getCommentViewers().size() - 1; j >= 0; j--) {
+					if (hasResultInComment(text, commentAttributes.get(index))) {
+						hasResultInGroup = true;
+						break;
+					}
+					index--;
 				}
 			}
+			if (hasResultInGroup) {
+				if (!group.isExpanded()) {
+					try {
+						part.setReflow(true);
+						group.setExpanded(true);
+					} finally {
+						part.setReflow(false);
+					}
+				}
+				// only expand the next group if the latest comments don't contain the search text
+				expanded = true;
+				hasResultInGroup = false;
+			}
+			int numResultsInGroup = searchCommentInGroup(text, listStyledText, commentIndex, group.getCommentViewers());
+
+			if (!group.isSectionExpanded() && numResultsInGroup != 0) {
+				final int indexGroup = commentIndex;
+
+				HyperlinkAdapter listener = new HyperlinkAdapter() {
+					@Override
+					public void linkActivated(HyperlinkEvent e) {
+						try {
+							setReflow(false);
+							List<StyledText> commentStyledText = new ArrayList<StyledText>();
+							part.setReflow(true);
+							group.setExpanded(true);
+							searchCommentInGroup(text, commentStyledText, indexGroup, group.getCommentViewers());
+							for (StyledText styledText : commentStyledText) {
+								highlightStyledText(styledText, text, 0);
+								listStyledText.add(styledText);
+							}
+							group.clearSectionTextClient();
+						} finally {
+							setReflow(true);
+						}
+						reflow();
+					}
+				};
+				group.createSectionHyperlink(
+						NLS.bind(Messages.ExtensibleBugzillaTaskEditorPage_showNumResults, numResultsInGroup), listener);
+			} else {
+				group.clearSectionTextClient();
+			}
+			commentIndex = commentIndex - group.getCommentViewers().size();
 		}
 	}
 
-	private static boolean findAndHighlightTextViewer(TextViewer viewer, FindReplaceDocumentAdapter adapter,
-			String findString, int startOffset) throws BadLocationException {
-		IRegion matchRegion = adapter.find(startOffset, findString, true, false, false, false);
-
-		if (matchRegion != null) {
-			int widgetOffset = matchRegion.getOffset();
-			int length = matchRegion.getLength();
-			HIGHLIGHT_STYLE_RANGE.start = widgetOffset;
-			HIGHLIGHT_STYLE_RANGE.length = length;
-			viewer.getTextWidget().setStyleRange(HIGHLIGHT_STYLE_RANGE);
-
-			findAndHighlightTextViewer(viewer, adapter, findString, widgetOffset + length);
-
-			return true;
+	private boolean hasAnyResultInComments(List<TaskAttribute> commentAttributes, String text) {
+		for (int i = 0; i < commentAttributes.size(); i++) {
+			if (hasResultInComment(text, commentAttributes.get(i))) {
+				return true;
+			}
 		}
-
 		return false;
 	}
 
-	public static void findAndHighlight(IFormPage page, String findString) {
-		IManagedForm form = page.getManagedForm();
-		if (form == null) {
-			return;
-		}
-		ScrolledForm scrolledForm = form.getForm();
-		if (scrolledForm == null) {
-			return;
-		}
+	private boolean hasResultInComment(String text, TaskAttribute comment) {
+		TaskAttribute attribute = comment.getMappedAttribute(TaskAttribute.COMMENT_TEXT);
+		return attribute.getValue().toLowerCase().contains(text);
+	}
 
-		List<TextViewer> found = new ArrayList<TextViewer>();
-		findTextViewerControl(scrolledForm.getBody(), found);
-
-		for (TextViewer viewer : found) {
+	// Expands matching comments and add their StyledText to the list. Returns total results in a group.
+	public int searchCommentInGroup(String text, List<StyledText> listStyledText, int commentIndex,
+			List<CommentViewer> commentViewers) {
+		int numResultsInGroup = 0;
+		for (int i = commentViewers.size() - 1; i >= 0; i--) {
+			CommentViewer viewer = commentViewers.get(i);
 			try {
-				// Wiping previous highlighted element
-				viewer.setRedraw(false);
-				viewer.refresh();
-				viewer.setRedraw(true);
-
-				FindReplaceDocumentAdapter adapter = new FindReplaceDocumentAdapter(viewer.getDocument());
-
-				if (!findAndHighlightTextViewer(viewer, adapter, findString, -1)) {
-					// toggle close if can't match the keyword
-					Composite comp = viewer.getControl().getParent();
-					while (comp != null) {
-						if (comp instanceof ExpandableComposite) {
-							ExpandableComposite ex = (ExpandableComposite) comp;
-							CommonFormUtil.setExpanded(ex, false);
-							break;
-						}
-						comp = comp.getParent();
+				ExpandableComposite composite = (ExpandableComposite) viewer.getControl();
+				if (hasResultInComment(
+						text,
+						getModel().getTaskData()
+								.getAttributeMapper()
+								.getAttributesByType(getModel().getTaskData(), TaskAttribute.TYPE_COMMENT)
+								.get(commentIndex))) {
+					viewer.suppressSelectionChanged(true);
+					if (composite != null && !composite.isExpanded()) {
+						CommonFormUtil.setExpanded(composite, true);
 					}
+					findStyledText(composite, listStyledText);
+					numResultsInGroup++;
 				}
-			} catch (BadLocationException e) {
-				//ignore
+			} finally {
+				viewer.suppressSelectionChanged(false);
+			}
+			commentIndex--;
+		}
+		return numResultsInGroup;
+	}
+
+	private void searchPart(List<StyledText> listStyledText, String text, String searchKey, Control control) {
+		if (text != null && text.toLowerCase().contains(searchKey)) {
+			if (control instanceof ExpandableComposite) {
+				ExpandableComposite composite = (ExpandableComposite) control;
+				if (composite != null && !composite.isExpanded()) {
+					CommonFormUtil.setExpanded(composite, true);
+				}
+				findStyledText(composite, listStyledText);
+			} else if (control instanceof Composite) {
+				findStyledText((Composite) control, listStyledText);
 			}
 		}
 	}
 
+	private void findStyledText(Composite composite, List<StyledText> listStyledText) {
+		if (composite != null && !composite.isDisposed()) {
+			for (Control child : composite.getChildren()) {
+				if (child instanceof StyledText) {
+					listStyledText.add((StyledText) child);
+					return;
+				}
+				if (child instanceof Composite) {
+					findStyledText((Composite) child, listStyledText);
+				}
+			}
+		}
+	}
+
+	private static void highlightStyledText(StyledText text, String findString, int startOffset) {
+		if (startOffset >= text.getText().length() - 1 || text.getText() == null || text.getText().length() == 0) {
+			return;
+		}
+		String textRange = text.getText(startOffset, text.getText().length() - 1);
+		if (textRange.length() != 0) {
+			textRange = textRange.toLowerCase();
+			if (textRange.indexOf(findString) != -1) {
+				int index = textRange.indexOf(findString) + startOffset;
+				int length = findString.length();
+				StyleRange highlightStyleRange = new StyleRange(index, length, null, HIGHLIGHTER_YELLOW);
+				text.setStyleRange(highlightStyleRange);
+				highlightStyledText(text, findString, index + length);
+			}
+		}
+	}
+
+	private void removePreviousHighlight() {
+		for (StyledText oldText : textToSearchAndHighlight) {
+			List<StyleRange> newRange = new ArrayList<StyleRange>();
+			if (!oldText.isDisposed()) {
+				for (StyleRange styleRange : oldText.getStyleRanges()) {
+					if (styleRange.background == null || !styleRange.background.equals(HIGHLIGHTER_YELLOW)) {
+						newRange.add(styleRange);
+					}
+				}
+				oldText.setStyleRanges(newRange.toArray(new StyleRange[newRange.size()]));
+			}
+		}
+		textToSearchAndHighlight.clear();
+	}
 }

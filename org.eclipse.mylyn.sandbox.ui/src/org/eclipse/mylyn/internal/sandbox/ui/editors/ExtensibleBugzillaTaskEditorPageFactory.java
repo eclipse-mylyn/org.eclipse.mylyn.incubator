@@ -19,7 +19,7 @@ import org.eclipse.mylyn.tasks.ui.editors.TaskEditorInput;
 import org.eclipse.ui.forms.editor.FormPage;
 
 /**
- * A bugzilla task editor page factory that invokes a task editor page that has wiki facilities
+ * A bugzilla task editor page factory that invokes a task editor page that has find functionality
  * 
  * @author Jingwen Ou
  * @author Steffen Pingel
