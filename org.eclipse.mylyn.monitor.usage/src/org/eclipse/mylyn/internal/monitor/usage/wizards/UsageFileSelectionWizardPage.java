@@ -58,6 +58,7 @@ public class UsageFileSelectionWizardPage extends WizardPage {
 
 	private static List<File> getBackupFiles() {
 		ArrayList<File> backupFiles = new ArrayList<File>();
+		FileInputStream inputStream = null;
 		try {
 
 			String destination = MonitorFileRolloverJob.getZippedMonitorFileDirPath();
@@ -72,7 +73,7 @@ public class UsageFileSelectionWizardPage extends WizardPage {
 					submissionLogFile.createNewFile();
 				}
 
-				FileInputStream inputStream = new FileInputStream(submissionLogFile);
+				inputStream = new FileInputStream(submissionLogFile);
 
 				int bytesRead = 0;
 				byte[] buffer = new byte[1000];
@@ -100,6 +101,14 @@ public class UsageFileSelectionWizardPage extends WizardPage {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 
+		} finally {
+			try {
+				if (inputStream != null) {
+					inputStream.close();
+				}
+			} catch (IOException ioe) {
+				// ignore
+			}
 		}
 		return backupFiles;
 	}

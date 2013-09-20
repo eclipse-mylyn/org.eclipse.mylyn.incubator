@@ -124,7 +124,6 @@ public class WebRepositorySettingsPage extends AbstractRepositorySettingsPage im
 		getContainer().updateButtons();
 	}
 
-	@SuppressWarnings("restriction")
 	@Override
 	protected void createAdditionalControls(Composite parent) {
 		addRepositoryTemplatesToServerUrlCombo();

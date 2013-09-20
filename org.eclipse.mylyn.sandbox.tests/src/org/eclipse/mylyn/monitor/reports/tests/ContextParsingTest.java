@@ -56,7 +56,6 @@ public class ContextParsingTest extends TestCase {
 		InteractionContextScaling scalingFactors = new InteractionContextScaling();
 		// scalingFactors.setDecay(new ScalingFactor("decay", .05f));
 		InteractionContext context = new InteractionContext("test", scalingFactors);
-		int numEvents = 0;
 		for (InteractionEvent event : events) {
 			if (event.isValidStructureHandle()) {
 				// if (SelectionMonitor.isValidStructureHandle(event)) {
@@ -77,7 +76,6 @@ public class ContextParsingTest extends TestCase {
 
 					assertTrue("should be positive: " + element.getInterest().getValue(), element.getInterest()
 							.getValue() >= 0);
-					numEvents++;
 				}
 			}
 		}
