@@ -18,6 +18,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart;
 import org.eclipse.jdt.ui.JavaUI;
@@ -129,11 +130,11 @@ public class StatisticsReportingTest extends TestCase {
 		assertEquals(2f, editRatioCollector.getMylynRatio(-1));
 	}
 
-	@SuppressWarnings("unused")
 	public void testSimpleSelection() {
 		mockExplorerSelection("A.java");
 		report.getStatisticsFromInteractionHistory(logger.getOutputFile(), new JobChangeAdapter() {
-			public void done() {
+			@Override
+			public void done(IJobChangeEvent event) {
 				UsageStatisticsSummary summary = report.getLastParsedSummary();
 				assertTrue(summary.getSingleSummaries().size() > 0);
 			}
@@ -141,7 +142,6 @@ public class StatisticsReportingTest extends TestCase {
 
 	}
 
-	@SuppressWarnings("unused")
 	public void testFilteredModeDetection() throws IOException {
 		UiUsageMonitorPlugin.getDefault().addMonitoredPreferences(ContextUiPlugin.getDefault().getPreferenceStore());
 
@@ -177,7 +177,8 @@ public class StatisticsReportingTest extends TestCase {
 		logger.stopMonitoring();
 		report.getStatisticsFromInteractionHistory(logger.getOutputFile(), new JobChangeAdapter() {
 
-			public void done() {
+			@Override
+			public void done(IJobChangeEvent event) {
 				int normal = viewCollector.getNormalViewSelections().get(JavaUI.ID_PACKAGES);
 				assertEquals(5, normal);
 

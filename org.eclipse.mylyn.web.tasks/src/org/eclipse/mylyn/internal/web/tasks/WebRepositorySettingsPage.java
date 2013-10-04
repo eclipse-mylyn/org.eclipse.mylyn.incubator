@@ -307,7 +307,7 @@ public class WebRepositorySettingsPage extends AbstractRepositorySettingsPage im
 
 	public void propertyChange(PropertyChangeEvent event) {
 		Object source = event.getSource();
-		if (source == taskUrlText || source == taskUrlText) {
+		if (source == taskUrlText) {
 			getWizard().getContainer().updateButtons();
 		}
 	}
