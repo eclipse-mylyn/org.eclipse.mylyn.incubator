@@ -21,6 +21,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.mylyn.commons.ui.CommonImages;
 import org.eclipse.mylyn.commons.workbench.forms.CommonFormUtil;
 import org.eclipse.mylyn.internal.bugzilla.ui.editor.BugzillaTaskEditorPage;
+import org.eclipse.mylyn.internal.tasks.ui.editors.RichTextEditor;
 import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorCommentPart;
 import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorCommentPart.CommentGroupViewer;
 import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorCommentPart.CommentViewer;
@@ -28,6 +29,7 @@ import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorDescriptionPart;
 import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorPlanningPart;
 import org.eclipse.mylyn.internal.tasks.ui.editors.TaskEditorSummaryPart;
 import org.eclipse.mylyn.tasks.core.data.TaskAttribute;
+import org.eclipse.mylyn.tasks.core.data.TaskData;
 import org.eclipse.mylyn.tasks.ui.editors.AbstractTaskEditorPart;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditor;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditorPartDescriptor;
@@ -68,7 +70,9 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 
 	private static final Color ERROR_NO_RESULT = new Color(Display.getDefault(), 255, 150, 150);
 
-	private final List<StyledText> textToSearchAndHighlight = new ArrayList<StyledText>();
+	private final List<StyledText> styledTexts = new ArrayList<StyledText>();
+
+	private final List<CommentGroupViewer> commentGroupViewers = new ArrayList<CommentGroupViewer>();;
 
 	public ExtensibleBugzillaTaskEditorPage(TaskEditor editor) {
 		super(editor);
@@ -97,74 +101,16 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 						@Override
 						public void modifyText(ModifyEvent e) {
 							if (findText.getText().equals("")) {
-								removePreviousHighlight();
+								clearSearchResults();
 								findText.setBackground(null);
 							}
 						}
 					});
 
 					findText.addSelectionListener(new SelectionAdapter() {
-
 						@Override
 						public void widgetDefaultSelected(SelectionEvent event) {
-							try {
-								setReflow(false);
-								findText.setBackground(null);
-								if (findText.getText().equals("")) {
-									return;
-								}
-								String searchText = findText.getText().toLowerCase();
-								IFormPart[] parts = getManagedForm().getParts();
-
-								removePreviousHighlight();
-
-								for (IFormPart part : parts) {
-									if (part instanceof TaskEditorSummaryPart) {
-										if (getModel().getTaskData()
-												.getRoot()
-												.getMappedAttribute(TaskAttribute.SUMMARY) != null) {
-											searchPart(textToSearchAndHighlight, getModel().getTaskData()
-													.getRoot()
-													.getMappedAttribute(TaskAttribute.SUMMARY)
-													.getValue(), searchText,
-													((TaskEditorSummaryPart) part).getControl());
-										}
-									} else if (part instanceof TaskEditorPlanningPart) {
-										if (((TaskEditorPlanningPart) part).getPlanningPart().getTask() != null) {
-											searchPart(textToSearchAndHighlight,
-													((TaskEditorPlanningPart) part).getPlanningPart()
-															.getTask()
-															.getNotes(), searchText,
-													((TaskEditorPlanningPart) part).getControl());
-										}
-									} else if (part instanceof TaskEditorDescriptionPart) {
-										if (getModel().getTaskData()
-												.getRoot()
-												.getMappedAttribute(TaskAttribute.DESCRIPTION) != null) {
-											searchPart(textToSearchAndHighlight, getModel().getTaskData()
-													.getRoot()
-													.getMappedAttribute(TaskAttribute.DESCRIPTION)
-													.getValue(), searchText,
-													((TaskEditorDescriptionPart) part).getControl());
-										}
-									} else if (part instanceof TaskEditorCommentPart) {
-										searchCommentPart(textToSearchAndHighlight, searchText,
-												(TaskEditorCommentPart) part);
-									}
-								}
-
-								if (!textToSearchAndHighlight.isEmpty()) {
-									for (StyledText styledText : textToSearchAndHighlight) {
-										highlightStyledText(styledText, searchText, 0);
-									}
-								} else {
-									findText.setBackground(ERROR_NO_RESULT);
-								}
-							} finally {
-								setReflow(true);
-							}
-							reflow();
-							findText.setFocus();
+							searchTaskEditor(findText);
 						}
 					});
 					toolkit.paintBordersFor(findComposite);
@@ -180,7 +126,7 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 				@Override
 				public void run() {
 					if (!this.isChecked()) {
-						removePreviousHighlight();
+						clearSearchResults();
 					}
 					getTaskEditor().updateHeaderToolBar();
 				}
@@ -192,12 +138,67 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 		toolBarManager.appendToGroup(IWorkbenchActionConstants.MB_ADDITIONS, toggleFindAction);
 	}
 
+	protected void searchTaskEditor(final Text findBox) {
+		try {
+			setReflow(false);
+			findBox.setBackground(null);
+			if (findBox.getText().equals("")) {
+				return;
+			}
+			clearSearchResults();
+			String searchString = findBox.getText().toLowerCase();
+			for (IFormPart part : getManagedForm().getParts()) {
+				if (!(part instanceof AbstractTaskEditorPart)) {
+					continue;
+				}
+				Control control = ((AbstractTaskEditorPart) part).getControl();
+				if (part instanceof TaskEditorSummaryPart) {
+					if (contains(getModel().getTaskData(), TaskAttribute.SUMMARY, searchString)) {
+						gatherStyledTexts(control, styledTexts);
+					}
+				} else if (part instanceof TaskEditorPlanningPart) {
+					RichTextEditor noteEditor = ((TaskEditorPlanningPart) part).getPlanningPart().getNoteEditor();
+					if (noteEditor != null && noteEditor.getText() != null
+							&& noteEditor.getText().toLowerCase().contains(searchString)) {
+						gatherStyledTexts(control, styledTexts);
+					}
+				} else if (part instanceof TaskEditorDescriptionPart) {
+					if (contains(getModel().getTaskData(), TaskAttribute.DESCRIPTION, searchString)) {
+						gatherStyledTexts(control, styledTexts);
+					}
+				} else if (part instanceof TaskEditorCommentPart) {
+					commentGroupViewers.clear();
+					commentGroupViewers.addAll(((TaskEditorCommentPart) part).getCommentGroupViewers());
+					searchCommentPart(searchString, (TaskEditorCommentPart) part, commentGroupViewers, styledTexts);
+				}
+			}
+
+			for (StyledText styledText : styledTexts) {
+				highlightMatches(searchString, styledText);
+			}
+			if (styledTexts.isEmpty()) {
+				findBox.setBackground(ERROR_NO_RESULT);
+			}
+		} finally {
+			setReflow(true);
+		}
+		reflow();
+		findBox.setFocus();
+	}
+
+	protected static boolean contains(TaskData taskData, String attributeId, String searchString) {
+		TaskAttribute attribute = taskData.getRoot().getMappedAttribute(attributeId);
+		if (attribute != null) {
+			return attribute.getValue().toLowerCase().contains(searchString);
+		}
+		return false;
+	}
+
 	@Override
 	public boolean canPerformAction(String actionId) {
 		if (actionId.equals(ActionFactory.FIND.getId())) {
 			return true;
 		}
-
 		return super.canPerformAction(actionId);
 	}
 
@@ -237,192 +238,183 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 	@Override
 	public void fillToolBar(IToolBarManager toolBarManager) {
 		super.fillToolBar(toolBarManager);
-
 		addFindAction(toolBarManager);
 	}
 
-	private void searchCommentPart(final List<StyledText> listStyledText, final String text,
-			final TaskEditorCommentPart part) {
-		List<TaskAttribute> commentAttributes = getModel().getTaskData()
-				.getAttributeMapper()
-				.getAttributesByType(getModel().getTaskData(), TaskAttribute.TYPE_COMMENT);
+	private void searchCommentPart(final String searchString, final TaskEditorCommentPart part,
+			List<CommentGroupViewer> commentGroupViewers, final List<StyledText> styledTexts) {
+		TaskData taskData = getModel().getTaskData();
+		List<TaskAttribute> commentAttributes = taskData.getAttributeMapper().getAttributesByType(taskData,
+				TaskAttribute.TYPE_COMMENT);
 
-		if (!hasAnyResultInComments(commentAttributes, text)) {
+		if (!anyCommentContains(commentAttributes, searchString)) {
 			return;
 		}
 
-		if (!part.isSectionExpanded()) {
+		if (!part.isCommentSectionExpanded()) {
 			try {
-				part.setReflow(true);
+				part.setReflow(false);
 				part.expandAllComments(false);
 			} finally {
-				part.setReflow(false);
+				part.setReflow(true);
 			}
 		}
-		List<CommentGroupViewer> commentGroupViewers = part.getCommentGroupViewers();
 
-		int commentIndex = commentAttributes.size() - 1;
-		boolean hasResultInGroup = false;
-		boolean expanded = false;
+		int end = commentAttributes.size();
+		boolean expandMatchingGroup = true;
 		for (int i = commentGroupViewers.size() - 1; i >= 0; i--) {
 			final CommentGroupViewer group = commentGroupViewers.get(i);
-			if (!expanded) {
-				int index = commentIndex;
-				for (int j = group.getCommentViewers().size() - 1; j >= 0; j--) {
-					if (hasResultInComment(text, commentAttributes.get(index))) {
-						hasResultInGroup = true;
-						break;
-					}
-					index--;
-				}
-			}
-			if (hasResultInGroup) {
+			List<CommentViewer> commentViewers = group.getCommentViewers();
+			int start = end - commentViewers.size();
+			List<TaskAttribute> groupAttributes = commentAttributes.subList(start, end);
+			if (expandMatchingGroup && anyCommentContains(groupAttributes, searchString)) {
 				if (!group.isExpanded()) {
 					try {
-						part.setReflow(true);
+						part.setReflow(false);
 						group.setExpanded(true);
 					} finally {
-						part.setReflow(false);
+						part.setReflow(true);
 					}
 				}
-				// only expand the next group if the latest comments don't contain the search text
-				expanded = true;
-				hasResultInGroup = false;
+				// once we've seen a matching group, don't expand any more groups
+				expandMatchingGroup = false;
 			}
-			int numResultsInGroup = searchCommentInGroup(text, listStyledText, commentIndex, group.getCommentViewers());
-
-			if (!group.isSectionExpanded() && numResultsInGroup != 0) {
-				final int indexGroup = commentIndex;
-
-				HyperlinkAdapter listener = new HyperlinkAdapter() {
-					@Override
-					public void linkActivated(HyperlinkEvent e) {
-						try {
-							setReflow(false);
-							List<StyledText> commentStyledText = new ArrayList<StyledText>();
-							part.setReflow(true);
-							group.setExpanded(true);
-							searchCommentInGroup(text, commentStyledText, indexGroup, group.getCommentViewers());
-							for (StyledText styledText : commentStyledText) {
-								highlightStyledText(styledText, text, 0);
-								listStyledText.add(styledText);
-							}
-							group.clearSectionTextClient();
-						} finally {
-							setReflow(true);
-						}
-						reflow();
-					}
-				};
-				group.createSectionHyperlink(
-						NLS.bind(Messages.ExtensibleBugzillaTaskEditorPage_showNumResults, numResultsInGroup), listener);
+			final List<CommentViewer> matchingViewers = searchComments(groupAttributes, commentViewers, searchString);
+			if (!group.isRenderedInSubSection() || group.isExpanded()) {
+				try {
+					part.setReflow(false);
+					gatherStyledTexts(matchingViewers, styledTexts);
+				} finally {
+					part.setReflow(true);
+				}
+				group.clearSectionHyperlink();
+			} else if (!matchingViewers.isEmpty()) {
+				addShowMoreLink(group, matchingViewers, part, searchString, styledTexts);
 			} else {
-				group.clearSectionTextClient();
+				group.clearSectionHyperlink();
 			}
-			commentIndex = commentIndex - group.getCommentViewers().size();
+			end = start;
 		}
 	}
 
-	private boolean hasAnyResultInComments(List<TaskAttribute> commentAttributes, String text) {
-		for (int i = 0; i < commentAttributes.size(); i++) {
-			if (hasResultInComment(text, commentAttributes.get(i))) {
+	protected void addShowMoreLink(final CommentGroupViewer group, final List<CommentViewer> matchingViewers,
+			final TaskEditorCommentPart part, final String searchString, final List<StyledText> styledTexts) {
+		HyperlinkAdapter listener = new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e) {
+				List<StyledText> commentStyledTexts = new ArrayList<StyledText>();
+				try {
+					setReflow(false);
+					part.setReflow(false);
+					group.setExpanded(true);
+					gatherStyledTexts(matchingViewers, commentStyledTexts);
+				} finally {
+					setReflow(true);
+					part.setReflow(true);
+				}
+				for (StyledText styledText : commentStyledTexts) {
+					highlightMatches(searchString, styledText);
+					styledTexts.add(styledText);
+				}
+				group.clearSectionHyperlink();
+				reflow();
+			}
+		};
+		group.createSectionHyperlink(
+				NLS.bind(Messages.ExtensibleBugzillaTaskEditorPage_showNumResults, matchingViewers.size()), listener);
+	}
+
+	private static boolean anyCommentContains(List<TaskAttribute> commentAttributes, String text) {
+		for (TaskAttribute commentAttribute : commentAttributes) {
+			if (commentContains(commentAttribute, text)) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private boolean hasResultInComment(String text, TaskAttribute comment) {
-		TaskAttribute attribute = comment.getMappedAttribute(TaskAttribute.COMMENT_TEXT);
-		return attribute.getValue().toLowerCase().contains(text);
+	private static boolean commentContains(TaskAttribute commentAttribute, String searchString) {
+		TaskAttribute attribute = commentAttribute.getMappedAttribute(TaskAttribute.COMMENT_TEXT);
+		return attribute.getValue().toLowerCase().contains(searchString);
 	}
 
-	// Expands matching comments and add their StyledText to the list. Returns total results in a group.
-	public int searchCommentInGroup(String text, List<StyledText> listStyledText, int commentIndex,
-			List<CommentViewer> commentViewers) {
-		int numResultsInGroup = 0;
-		for (int i = commentViewers.size() - 1; i >= 0; i--) {
+	private static List<CommentViewer> searchComments(List<TaskAttribute> commentAttributes,
+			List<CommentViewer> commentViewers, String searchString) {
+		List<CommentViewer> matchingViewers = new ArrayList<TaskEditorCommentPart.CommentViewer>();
+		for (int i = 0; i < commentViewers.size(); i++) {
 			CommentViewer viewer = commentViewers.get(i);
+			if (commentContains(commentAttributes.get(i), searchString)) {
+				matchingViewers.add(viewer);
+			}
+		}
+		return matchingViewers;
+	}
+
+	protected static void gatherStyledTexts(List<CommentViewer> commentViewers, List<StyledText> styledTexts) {
+		for (CommentViewer viewer : commentViewers) {
 			try {
 				ExpandableComposite composite = (ExpandableComposite) viewer.getControl();
-				if (hasResultInComment(
-						text,
-						getModel().getTaskData()
-								.getAttributeMapper()
-								.getAttributesByType(getModel().getTaskData(), TaskAttribute.TYPE_COMMENT)
-								.get(commentIndex))) {
-					viewer.suppressSelectionChanged(true);
-					if (composite != null && !composite.isExpanded()) {
-						CommonFormUtil.setExpanded(composite, true);
-					}
-					findStyledText(composite, listStyledText);
-					numResultsInGroup++;
-				}
-			} finally {
-				viewer.suppressSelectionChanged(false);
-			}
-			commentIndex--;
-		}
-		return numResultsInGroup;
-	}
-
-	private void searchPart(List<StyledText> listStyledText, String text, String searchKey, Control control) {
-		if (text != null && text.toLowerCase().contains(searchKey)) {
-			if (control instanceof ExpandableComposite) {
-				ExpandableComposite composite = (ExpandableComposite) control;
+				viewer.suppressSelectionChanged(true);
 				if (composite != null && !composite.isExpanded()) {
 					CommonFormUtil.setExpanded(composite, true);
 				}
-				findStyledText(composite, listStyledText);
-			} else if (control instanceof Composite) {
-				findStyledText((Composite) control, listStyledText);
+				gatherStyledTextsInComposite(composite, styledTexts);
+			} finally {
+				viewer.suppressSelectionChanged(false);
 			}
 		}
 	}
 
-	private void findStyledText(Composite composite, List<StyledText> listStyledText) {
+	private static void gatherStyledTexts(Control control, List<StyledText> result) {
+		if (control instanceof ExpandableComposite) {
+			ExpandableComposite composite = (ExpandableComposite) control;
+			if (!composite.isExpanded()) {
+				CommonFormUtil.setExpanded(composite, true);
+			}
+			gatherStyledTextsInComposite(composite, result);
+		} else if (control instanceof Composite) {
+			gatherStyledTextsInComposite((Composite) control, result);
+		}
+	}
+
+	private static void gatherStyledTextsInComposite(Composite composite, List<StyledText> result) {
 		if (composite != null && !composite.isDisposed()) {
 			for (Control child : composite.getChildren()) {
 				if (child instanceof StyledText) {
-					listStyledText.add((StyledText) child);
-					return;
-				}
-				if (child instanceof Composite) {
-					findStyledText((Composite) child, listStyledText);
+					result.add((StyledText) child);
+				} else if (child instanceof Composite) {
+					gatherStyledTextsInComposite((Composite) child, result);
 				}
 			}
 		}
 	}
 
-	private static void highlightStyledText(StyledText text, String findString, int startOffset) {
-		if (startOffset >= text.getText().length() - 1 || text.getText() == null || text.getText().length() == 0) {
-			return;
-		}
-		String textRange = text.getText(startOffset, text.getText().length() - 1);
-		if (textRange.length() != 0) {
-			textRange = textRange.toLowerCase();
-			if (textRange.indexOf(findString) != -1) {
-				int index = textRange.indexOf(findString) + startOffset;
-				int length = findString.length();
-				StyleRange highlightStyleRange = new StyleRange(index, length, null, HIGHLIGHTER_YELLOW);
-				text.setStyleRange(highlightStyleRange);
-				highlightStyledText(text, findString, index + length);
+	private static void highlightMatches(String searchString, StyledText styledText) {
+		String text = styledText.getText().toLowerCase();
+		for (int index = 0; index < text.length(); index += searchString.length()) {
+			index = text.indexOf(searchString, index);
+			if (index == -1) {
+				break;
 			}
+			styledText.setStyleRange(new StyleRange(index, searchString.length(), null, HIGHLIGHTER_YELLOW));
 		}
 	}
 
-	private void removePreviousHighlight() {
-		for (StyledText oldText : textToSearchAndHighlight) {
-			List<StyleRange> newRange = new ArrayList<StyleRange>();
+	private void clearSearchResults() {
+		for (StyledText oldText : styledTexts) {
+			List<StyleRange> otherRanges = new ArrayList<StyleRange>();
 			if (!oldText.isDisposed()) {
 				for (StyleRange styleRange : oldText.getStyleRanges()) {
 					if (styleRange.background == null || !styleRange.background.equals(HIGHLIGHTER_YELLOW)) {
-						newRange.add(styleRange);
+						otherRanges.add(styleRange); // preserve ranges that aren't from highlighting search results
 					}
 				}
-				oldText.setStyleRanges(newRange.toArray(new StyleRange[newRange.size()]));
+				oldText.setStyleRanges(otherRanges.toArray(new StyleRange[otherRanges.size()]));
 			}
 		}
-		textToSearchAndHighlight.clear();
+		styledTexts.clear();
+		for (CommentGroupViewer group : commentGroupViewers) {
+			group.clearSectionHyperlink();
+		}
 	}
 }
