@@ -13,14 +13,10 @@ package org.eclipse.mylyn.internal.sandbox.ui.editors;
 
 import java.util.Set;
 
-import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.mylyn.internal.bugzilla.ui.editor.BugzillaTaskEditorPage;
 import org.eclipse.mylyn.tasks.ui.editors.AbstractTaskEditorPart;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditor;
 import org.eclipse.mylyn.tasks.ui.editors.TaskEditorPartDescriptor;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.actions.ActionFactory;
 
 /**
  * A bugzilla task editor page that has wiki facilities.
@@ -55,46 +51,4 @@ public class ExtensibleBugzillaTaskEditorPage extends BugzillaTaskEditorPage {
 		return descriptors;
 	}
 
-	/*
-	 * Find implementation. To be moved to AbstractTaskEditorPage.
-	 */
-
-	private TaskEditorFindSupport findSupport;
-
-	@Override
-	public void init(IEditorSite site, IEditorInput input) {
-		super.init(site, input);
-		findSupport = createFindSupport();
-	}
-
-	/**
-	 * Subclasses may return null to disable the find functionality.
-	 */
-	protected TaskEditorFindSupport createFindSupport() {
-		return new TaskEditorFindSupport(this);
-	}
-
-	@Override
-	public boolean canPerformAction(String actionId) {
-		if (findSupport != null && actionId.equals(ActionFactory.FIND.getId())) {
-			return true;
-		}
-		return super.canPerformAction(actionId);
-	}
-
-	@Override
-	public void doAction(String actionId) {
-		if (findSupport != null && actionId.equals(ActionFactory.FIND.getId())) {
-			findSupport.toggleFind();
-		}
-		super.doAction(actionId);
-	}
-
-	@Override
-	public void fillToolBar(IToolBarManager toolBarManager) {
-		super.fillToolBar(toolBarManager);
-		if (findSupport != null) {
-			findSupport.addFindAction(toolBarManager);
-		}
-	}
 }
