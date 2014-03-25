@@ -12,6 +12,9 @@
    <feature url="features/org.eclipse.mylyn.monitor_feature_0.0.0.jar" id="org.eclipse.mylyn.monitor_feature" version="0.0.0">
       <category name="Incubator"/>
    </feature>
+   <feature url="features/org.eclipse.mylyn.trac.wiki_feature_0.0.0.jar" id="org.eclipse.mylyn.trac.wiki_feature" version="0.0.0">
+      <category name="Incubator"/>
+   </feature>
    <feature url="features/org.eclipse.mylyn.web.tasks_feature_0.0.0.jar" id="org.eclipse.mylyn.web.tasks_feature" version="0.0.0">
       <category name="Incubator"/>
    </feature>
