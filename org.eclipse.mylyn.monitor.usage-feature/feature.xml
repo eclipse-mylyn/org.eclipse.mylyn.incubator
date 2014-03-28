@@ -12,7 +12,7 @@
 <feature
       id="org.eclipse.mylyn.monitor_feature"
       label="%featureName"
-      version="3.11.0.qualifier"
+      version="3.12.0.qualifier"
       provider-name="%providerName"
       plugin="org.eclipse.mylyn.sandbox.ui">
 
@@ -30,8 +30,8 @@
 
    <requires>
       <import feature="org.eclipse.rcp" version="3.3.0" match="greaterOrEqual"/>
-      <import feature="org.eclipse.mylyn.commons" version="3.11.0" match="compatible"/>
-      <import feature="org.eclipse.mylyn.monitor" version="3.11.0" match="compatible"/>
+      <import feature="org.eclipse.mylyn.commons" version="3.12.0" match="compatible"/>
+      <import feature="org.eclipse.mylyn.monitor" version="3.12.0" match="compatible"/>
    </requires>
 
    <plugin
