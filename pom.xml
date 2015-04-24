@@ -87,5 +87,6 @@
     <module>org.eclipse.mylyn.wikitext.sandbox.ui</module>
     <module>org.eclipse.mylyn.experimental-sdk-feature</module>
     <module>org.eclipse.mylyn.incubator-site</module>
+    <module>org.eclipse.mylyn.incubator.development-feature</module>
   </modules>
 </project>
