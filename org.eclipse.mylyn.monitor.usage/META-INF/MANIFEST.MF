@@ -30,4 +30,4 @@ Export-Package:
  org.eclipse.mylyn.internal.monitor.usage.preferences;x-internal:=true,
  org.eclipse.mylyn.internal.monitor.usage.wizards;x-internal:=true,
  org.eclipse.mylyn.monitor.usage
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7

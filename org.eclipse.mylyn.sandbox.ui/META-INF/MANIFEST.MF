@@ -46,6 +46,6 @@ Export-Package: org.eclipse.mylyn.internal.sandbox.ui;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.ui.hyperlinks;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.ui.planner;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.ui.views;x-internal:=true
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: .
 Import-Package: org.eclipse.mylyn.commons.net
