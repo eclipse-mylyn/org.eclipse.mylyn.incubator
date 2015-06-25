@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Mylyn UI Tests
 Bundle-SymbolicName: org.eclipse.mylyn.tests.ui;singleton:=true
-Bundle-Version: 3.16.0.qualifier
+Bundle-Version: 3.17.0.qualifier
 Bundle-Vendor: Eclipse Mylyn
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.eclipse.swtbot.eclipse.core;bundle-version="2.0.0",
