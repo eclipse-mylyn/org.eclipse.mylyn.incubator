@@ -15,6 +15,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.mylyn.tasks.core;bundle-version="[3.1.0,4.0.0)",
  org.eclipse.mylyn.tasks.ui;bundle-version="[3.1.0,4.0.0)",
  org.eclipse.mylyn.xml3.core;bundle-version="1.0.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: org.eclipse.mylyn.internal.examples.xml.ui;x-internal:=true

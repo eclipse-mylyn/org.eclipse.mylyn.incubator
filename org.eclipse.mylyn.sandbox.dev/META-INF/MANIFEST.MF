@@ -18,7 +18,7 @@ Require-Bundle: org.eclipse.core.resources,
  org.eclipse.mylyn.tasks.ui;bundle-version="3.8.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: Eclipse Mylyn
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-Activator: org.eclipse.mylyn.internal.sandbox.dev.MylynDevPlugin
 Export-Package: org.eclipse.mylyn.internal.sandbox.dev;x-internal:=true,
  org.eclipse.mylyn.internal.sandbox.dev.actions;x-internal:=true,

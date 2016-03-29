@@ -22,4 +22,4 @@ Export-Package: org.eclipse.mylyn.internal.monitor.reports;x-internal:=true,
  org.eclipse.mylyn.internal.monitor.reports.collectors;x-internal:=true,
  org.eclipse.mylyn.internal.monitor.reports.preferences;x-internal:=true,
  org.eclipse.mylyn.internal.monitor.reports.ui.actions;x-internal:=true
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
