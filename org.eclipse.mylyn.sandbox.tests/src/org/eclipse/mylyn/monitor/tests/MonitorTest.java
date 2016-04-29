@@ -16,8 +16,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.mylyn.internal.monitor.ui.KeybindingCommandMonitor;
@@ -29,6 +27,8 @@ import org.eclipse.mylyn.monitor.ui.IMonitorLifecycleListener;
 import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IPerspectiveRegistry;
 import org.eclipse.ui.PlatformUI;
+
+import junit.framework.TestCase;
 
 /**
  * @author Mik Kersten
@@ -109,16 +109,14 @@ public class MonitorTest extends TestCase implements IMonitorLifecycleListener {
 	}
 
 	private void generateSelection() {
-		selectionMonitor.selectionChanged(PlatformUI.getWorkbench()
-				.getActiveWorkbenchWindow()
-				.getActivePage()
-				.getActivePart(), new StructuredSelection("yo"));
+		selectionMonitor.selectionChanged(
+				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActivePart(),
+				new StructuredSelection("yo"));
 	}
 
 	private void generatePerspectiveSwitch() {
 		IPerspectiveRegistry registry = PlatformUI.getWorkbench().getPerspectiveRegistry();
-		IPerspectiveDescriptor perspective = registry.clonePerspective("newId", "newLabel",
-				registry.getPerspectives()[0]);
+		IPerspectiveDescriptor perspective = registry.getPerspectives()[0];
 
 		perspectiveMonitor.perspectiveActivated(null, perspective);
 	}
@@ -157,12 +155,12 @@ public class MonitorTest extends TestCase implements IMonitorLifecycleListener {
 // File defaultFile = MylarMonitorPlugin.getDefault().getMonitorLogFile();
 // MylarMonitorPlugin.getDefault().stopMonitoring();
 // assertTrue(logger.clearInteractionHistory());
-//    	
+//
 // MylarMonitorPlugin.getDefault().startMonitoring();
 // generateSelection();
 // generateSelection();
 // assertEquals(2, logger.getHistoryFromFile(defaultFile).size());
-//        
+//
 // File newFile =
 // MylarMonitorPlugin.getDefault().moveMonitorLogFile(ContextCore.getMylarDataDirectory()
 // + "/monitor-test-new.xml");
@@ -173,7 +171,7 @@ public class MonitorTest extends TestCase implements IMonitorLifecycleListener {
 // assertEquals(newFile, logger.getOutputFile());
 // assertEquals(2, logger.getHistoryFromFile(newFile).size());
 // assertEquals(0, logger.getHistoryFromFile(defaultFile).size());
-//    	
+//
 // generateSelection();
 // assertEquals(3, logger.getHistoryFromFile(newFile).size());
 // File restoredFile =
